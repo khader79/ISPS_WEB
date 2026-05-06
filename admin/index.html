@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>لوحة التحكم - موقف سمارت</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", sans-serif; }
+    body { background: #0a0f1e; color: #eef2ff; overflow-x: hidden; }
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(180deg, #0f172a 0%, #0a0f1e 100%);
+      border-left: 1px solid rgba(59, 130, 246, 0.2);
+      padding: 30px 20px;
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      overflow-y: auto;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+    }
+    .sidebar h2 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 35px;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-radius: 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+    .nav-item i { width: 24px; font-size: 1.2rem; }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      transform: translateX(-4px);
+    }
+    .main {
+      flex: 1;
+      margin-right: 280px;
+      padding: 30px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .stat-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 22px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px -8px rgba(0, 0, 0, 0.5);
+      border-color: #3b82f6;
+    }
+    .stat-card .label {
+      color: #94a3b8;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-card .value {
+      font-size: 38px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .panel {
+      background: #1e293b;
+      border-radius: 28px;
+      padding: 24px;
+      margin-bottom: 30px;
+      border: 1px solid #334155;
+      transition: all 0.2s;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 12px;
+    }
+    .panel-header h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 14px 12px; text-align: right; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; font-weight: 600; font-size: 0.85rem; }
+    button {
+      background: #3b82f6;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    button:hover { background: #2563eb; transform: translateY(-2px); }
+    button.danger { background: #ef4444; }
+    button.danger:hover { background: #dc2626; }
+    button.success { background: #10b981; }
+    button.outline { background: transparent; border: 1px solid #3b82f6; color: #3b82f6; }
+    select, input {
+      background: #0f172a;
+      border: 1px solid #334155;
+      padding: 8px 14px;
+      border-radius: 20px;
+      color: white;
+      font-size: 0.9rem;
+    }
+    .badge-online { color: #10b981; font-weight: bold; }
+    .badge-offline { color: #ef4444; font-weight: bold; }
+    .section { display: none; }
+    .section.active { display: block; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(100%); transition: 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0; }
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <h2><i class="fas fa-parking"></i> موقف سمارت</h2>
+    <div class="nav-item active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</div>
+    <div class="nav-item" data-section="slots"><i class="fas fa-square"></i> المواقف</div>
+    <div class="nav-item" data-section="reservations"><i class="fas fa-calendar-check"></i> الحجوزات</div>
+    <div class="nav-item" data-section="liveAccess"><i class="fas fa-key"></i> الأكواد النشطة</div>
+    <div class="nav-item" data-section="users"><i class="fas fa-users"></i> المستخدمون</div>
+    <div class="nav-item" data-section="gates"><i class="fas fa-door-open"></i> البوابات</div>
+    <div class="nav-item" data-section="system"><i class="fas fa-microchip"></i> النظام</div>
+    <div class="nav-item" data-section="logs"><i class="fas fa-history"></i> السجلات</div>
+    <!-- زر Embedded Tools بدلاً من iframe -->
+    <div class="nav-item" data-section="embedded_tools"><i class="fas fa-microchip"></i> Embedded Tools</div>
+    <div class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</div>
+  </div>
+  <div class="main">
+    <div id="dashboard" class="section active">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label"><i class="fas fa-parking"></i> الأماكن المتاحة</div><div class="value" id="adminAvailable">0</div></div>
+        <div class="stat-card"><div class="label"><i class="fas fa-car"></i> المشغولة</div><div class="value" id="adminOccupied">0</div></div>
+        <div class="stat-card"><div class="label"><i class="fas fa-bookmark"></i> الحجوزات النشطة</div><div class="value" id="adminActiveRes">0</div></div>
+        <div class="stat-card"><div class="label"><i class="fas fa-user-friends"></i> إجمالي المستخدمين</div><div class="value" id="adminTotalUsers">0</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3><i class="fas fa-microchip"></i> حالة الأجهزة</h3><button id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button></div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: center;">
+          <div><i class="fas fa-microchip"></i> ESP32: <span id="espStatusAdmin">--</span></div>
+          <div><i class="fas fa-wifi"></i> WiFi: <span id="wifiStatusAdmin">--</span></div>
+          <div><i class="fas fa-heartbeat"></i> آخر نبضة: <span id="lastHeartbeatAdmin">--</span></div>
+          <div><i class="fas fa-memory"></i> ذاكرة حرة: <span id="freeHeapAdmin">--</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="slots" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-list"></i> جميع المواقف</h3></div><div class="table-container"><table><thead><tr><th>الموقف</th><th>الحالة</th><th>محجوز بواسطة</th><th>وقت الحجز</th></tr></thead><tbody id="slotsTable"></tbody></table></div></div></div>
+    <div id="reservations" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> الحجوزات</h3></div><div class="table-container"><table><thead><tr><th>المستخدم</th><th>الموقف</th><th>الحالة</th><th>ينتهي في</th><th>الكود</th></tr></thead><tbody id="reservationsTable"></tbody></table></div></div></div>
+    <div id="liveAccess" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-key"></i> أكواد الدخول النشطة</h3></div><div class="table-container"><tr><thead><tr><th>الكود</th><th>المستخدم</th><th>الموقف</th><th>ينتهي في</th><th>الإجراء</th></tr></thead><tbody id="liveAccessTable"></tbody></table></div></div></div>
+    <div id="users" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-user-cog"></i> إدارة المستخدمين</h3></div><div class="table-container"><table><thead><tr><th>البريد</th><th>الدور</th><th>الحالة</th><th>تغيير الدور</th></td></thead><tbody id="usersTable"></tbody></table></div></div></div>
+    <div id="gates" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-door-closed"></i> التحكم بالبوابات</h3></div><div style="display: flex; gap: 30px; flex-wrap: wrap;"><div><h4>بوابة الدخول</h4><div id="entryGateStatus">مغلقة</div><button onclick="controlGate('entry', true)"><i class="fas fa-unlock-alt"></i> فتح</button> <button onclick="controlGate('entry', false)"><i class="fas fa-lock"></i> إغلاق</button></div><div><h4>بوابة الخروج</h4><div id="exitGateStatus">مغلقة</div><button onclick="controlGate('exit', true)"><i class="fas fa-unlock-alt"></i> فتح</button> <button onclick="controlGate('exit', false)"><i class="fas fa-lock"></i> إغلاق</button></div></div></div></div>
+    <div id="system" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-sliders-h"></i> إعدادات النظام</h3></div><div style="display: grid; gap: 20px; max-width: 450px;"><div><label>سعر الساعة ($)</label><input type="number" id="pricePerHour" value="5"></div><div><label>مدة الحجز الافتراضية (دقيقة)</label><input type="number" id="defaultHold" value="30"></div><button id="saveSettingsBtn"><i class="fas fa-save"></i> حفظ الإعدادات</button><button id="emergencyStopBtn" class="danger"><i class="fas fa-ban"></i> إيقاف طوارئ</button></div></div></div>
+    <div id="logs" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-list-ul"></i> سجلات النظام</h3><button id="clearLogsBtn"><i class="fas fa-trash-alt"></i> مسح الكل</button></div><div class="table-container"><table><thead></table><th>الوقت</th><th>الإجراء</th><th>المستخدم</th></tr></thead><tbody id="logsTable"></tbody></table></div></div></div>
+
+    <!-- قسم Embedded Tools - يظهر زر لفتح الأداة في نافذة جديدة -->
+    <div id="embedded_tools" class="section" style="padding: 40px 20px; text-align: center;">
+      <div class="panel" style="max-width: 500px; margin: 0 auto;">
+        <i class="fas fa-microchip" style="font-size: 64px; color: #3b82f6; margin-bottom: 20px;"></i>
+        <h2 style="margin-bottom: 16px;">🧰 Embedded Tools Suite</h2>
+        <p style="color: #94a3b8; margin-bottom: 24px;">ستُفتح الأداة المتكاملة (محرر Arduino IDE، محاكي الدوائر، ومنشئ الدوائر) في نافذة جديدة لتتمكن من استخدامها بسهولة.</p>
+        <button id="openEmbeddedToolsBtn" class="success" style="font-size: 16px; padding: 12px 28px;">
+          <i class="fas fa-external-link-alt"></i> فتح الأداة في نافذة جديدة
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "system": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('users/'+auth.uid+'/role').val() == 'admin')"
+    },
+    "slots": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('users/'+auth.uid+'/role').val() == 'admin' || root.child('users/'+auth.uid+'/role').val() == 'staff')"
+    },
+    "reservations": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "liveAccess": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "commands": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "gates": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && (auth.uid == $uid || root.child('users/'+auth.uid+'/role').val() == 'admin')"
+      }
+    },
+    "logs": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "payments": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
