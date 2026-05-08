@@ -11,18 +11,17 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// إعداد رفع الملفات المؤقتة
+// Temporary file upload setup
 const upload = multer({ dest: "uploads/" });
 
-// مسار أدوات arduino-cli (حمّل يدوياً أو استخدم المسار المطلق)
+// Arduino CLI path (install manually or provide absolute path)
 const ARDUINO_CLI_PATH = process.env.ARDUINO_CLI_PATH || "arduino-cli";
 
-// التأكد من وجود arduino-cli
 console.log(
   "✅ Server started. Make sure arduino-cli is installed and in PATH.",
 );
 
-// نقطة النهاية: تجميع الكود
+// Endpoint: compile Arduino code
 app.post("/compile", upload.single("code"), async (req, res) => {
   const { boardFqbn } = req.body; // e.g., "arduino:avr:uno" or "esp32:esp32:esp32"
   if (!boardFqbn) {
@@ -42,7 +41,7 @@ app.post("/compile", upload.single("code"), async (req, res) => {
   const inoPath = path.join(sketchPath, "sketch.ino");
   await fs.move(codeFile.path, inoPath, { overwrite: true });
 
-  // إضافة المكتبات الشائعة تلقائياً (اختياري)
+  // Auto-include common libraries (optional)
   const libs = [
     "WiFi",
     "Firebase_ESP_Client",
@@ -51,9 +50,9 @@ app.post("/compile", upload.single("code"), async (req, res) => {
   ];
 
   let compileCmd = `${ARDUINO_CLI_PATH} compile --fqbn ${boardFqbn} ${sketchPath}`;
-  // إضافة المكتبات إذا وجدت
+  // Add library paths if libs are installed locally
   for (let lib of libs) {
-    compileCmd += ` --libraries "${path.join(__dirname, "libs", lib)}"`; // هذا يتطلب تثبيت المكتبات مسبقاً
+    compileCmd += ` --libraries "${path.join(__dirname, "libs", lib)}"`; // Requires libraries to be pre-installed
   }
 
   exec(
@@ -64,7 +63,7 @@ app.post("/compile", upload.single("code"), async (req, res) => {
         console.error(stderr);
         return res.status(500).json({ error: stderr || error.message });
       }
-      // البحث عن ملف bin الناتج
+      // Find compiled binary
       const buildDir = path.join(sketchPath, "build");
       const files = await fs.readdir(buildDir);
       const binFile = files.find(
@@ -77,11 +76,11 @@ app.post("/compile", upload.single("code"), async (req, res) => {
       }
       const binPath = path.join(buildDir, binFile);
       const binData = await fs.readFile(binPath);
-      // إرسال الملف الثنائي
+      // Send binary file
       res.setHeader("Content-Type", "application/octet-stream");
       res.setHeader("Content-Disposition", `attachment; filename=firmware.bin`);
       res.send(binData);
-      // تنظيف: حذف المجلد بعد 5 دقائق
+      // Cleanup: remove sketch folder after 5 minutes
       setTimeout(
         () => fs.remove(sketchPath).catch(console.error),
         5 * 60 * 1000,

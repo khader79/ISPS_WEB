@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import {
   getDatabase,
   ref,
@@ -7,12 +7,12 @@ import {
   update,
   runTransaction,
   get,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 import {
   getAuth,
   signOut,
   onAuthStateChanged,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBHFT1kSAa0kwxfQQWK4ZSMcv-N0PdqIr8",
@@ -193,6 +193,18 @@ async function createReservation() {
       accessType: "RESERVATION",
       createdAt: now,
     });
+    // Also write to liveAccess/entry for ESP32 simulator / firmware
+    await set(ref(db, "liveAccess/entry"), {
+      otp: otpCode,
+      reservationId,
+      userId: currentUser.uid,
+      slotId,
+      active: true,
+      used: false,
+      expireAt,
+      accessType: "RESERVATION",
+      createdAt: now,
+    });
     showStatus(
       reserveStatus,
       `✅ تم حجز ${slotId}! رقم الحجز: ${reservationId.slice(-8)}`,
@@ -219,6 +231,9 @@ async function cancelReservation() {
       [`reservations/${reservationId}/status`]: "CANCELLED",
       [`reservations/${reservationId}/otp/active`]: false,
       [`liveAccess/ACC_${reservationId}/active`]: false,
+      "liveAccess/entry/active": false,
+      "liveAccess/entry/otp": "",
+      "liveAccess/entry/used": true,
     });
     showStatus(reserveStatus, "تم إلغاء الحجز");
     currentReservation = null;
@@ -246,20 +261,20 @@ async function submitGateOTP() {
       status: "pending",
       createdAt: Date.now(),
     });
+    // Also write to path that ESP32 reads from
+    await set(ref(db, "commands/enteredOTP"), otp);
+    await set(ref(db, "commands/lastGateResponse"), "pending");
     showStatus(gateStatusMsg, "تم إرسال الطلب، انتظر فتح البوابة...");
     gateOtpInput.value = "";
-    const reqRef = ref(db, `commands/gateRequests/${requestId}`);
-    const unsubscribe = onValue(reqRef, (snap) => {
-      const data = snap.val();
-      if (data && data.status !== "pending") {
-        if (data.status === "granted")
-          showStatus(gateStatusMsg, "✅ تم فتح البوابة، ادخل الآن");
-        else
-          showStatus(
-            gateStatusMsg,
-            `❌ رفض: ${data.message || "كود غير صالح"}`,
-            true,
-          );
+    // Listen for ESP32 response
+    const respRef = ref(db, "commands/lastGateResponse");
+    const unsubscribe = onValue(respRef, (snap) => {
+      const val = snap.val();
+      if (val === "granted") {
+        showStatus(gateStatusMsg, "✅ تم فتح البوابة، ادخل الآن");
+        unsubscribe();
+      } else if (val !== "pending" && val !== "") {
+        showStatus(gateStatusMsg, `❌ رفض: ${val}`, true);
         unsubscribe();
       }
     });

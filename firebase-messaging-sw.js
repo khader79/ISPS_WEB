@@ -1,8 +1,8 @@
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
+  "https://www.gstatic.com/firebasejs/12.12.1/firebase-app-compat.js",
 );
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js",
+  "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging-compat.js",
 );
 firebase.initializeApp({
   apiKey: "AIzaSyBHFT1kSAa0kwxfQQWK4ZSMcv-N0PdqIr8",
@@ -10,7 +10,7 @@ firebase.initializeApp({
   databaseURL: "https://iot-smart-parking-49293-default-rtdb.firebaseio.com",
   projectId: "iot-smart-parking-49293",
   storageBucket: "iot-smart-parking-49293.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID", // تجده في إعدادات Cloud Messaging
+  messagingSenderId: "9229464595",
 });
 const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {

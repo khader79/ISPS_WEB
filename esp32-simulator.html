@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Parking — ESP32 Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0c14; --surface: #0f1422; --surface2: #131a2c;
+      --border: #1f2b44; --accent: #00e0ff; --accent2: #8b5cf6;
+      --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+      --text: #eef2ff; --muted: #6b7280;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+    .header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header h1 span { color: var(--accent); }
+    .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge.online { background: rgba(16,185,129,0.15); color: var(--green); }
+    .badge.offline { background: rgba(239,68,68,0.15); color: var(--red); }
+    .main { display: grid; grid-template-columns: 1fr 340px; gap: 12px; padding: 12px; max-width: 1400px; margin: 0 auto; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .card-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+    /* Login */
+    .login-box { max-width: 360px; margin: 60px auto; text-align: center; }
+    .login-box input { width: 100%; padding: 10px 14px; margin-bottom: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+    .login-box input:focus { outline: none; border-color: var(--accent); }
+    .btn { padding: 8px 16px; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.15); }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-amber { background: var(--amber); color: #000; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-block { width: 100%; }
+    .btn-lg { padding: 12px 20px; font-size: 15px; }
+
+    /* Slots */
+    .slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .slot { background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.3s; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .slot:hover { border-color: var(--accent); }
+    .slot .id { font-size: 16px; font-weight: 700; }
+    .slot .icon { font-size: 22px; margin: 4px 0; }
+    .slot .s { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 8px; }
+    .slot.empty { border-color: rgba(16,185,129,0.3); }
+    .slot.empty .s { background: rgba(16,185,129,0.15); color: var(--green); }
+    .slot.reserved { border-color: rgba(245,158,11,0.4); }
+    .slot.reserved .s { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .slot.detected { border-color: rgba(245,158,11,0.3); }
+    .slot.detected .s { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .slot.occupied { border-color: rgba(239,68,68,0.3); }
+    .slot.occupied .s { background: rgba(239,68,68,0.15); color: var(--red); }
+
+    /* Gates */
+    .gate-row { display: flex; gap: 10px; }
+    .gate { flex: 1; text-align: center; }
+    .gate-visual { height: 120px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; margin-bottom: 8px; }
+    .gate-bar { position: absolute; bottom: 0; left: 8%; right: 8%; height: 100%; background: linear-gradient(to top, var(--accent), var(--accent2)); border-radius: 3px 3px 0 0; transition: height 0.5s ease; }
+    .gate-bar.closed { height: 100%; }
+    .gate-bar.open { height: 12%; }
+    .gate-label { font-size: 13px; font-weight: 600; }
+    .gate-st { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .gate .btn-group { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+
+    /* LCD */
+    .lcd { background: #1a2332; border: 2px solid #2a3a4a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; min-height: 56px; display: flex; flex-direction: column; justify-content: center; }
+    .lcd .row { font-size: 16px; letter-spacing: 2px; color: var(--accent); text-shadow: 0 0 4px rgba(0,224,255,0.3); }
+    .lcd .row:first-child { margin-bottom: 4px; }
+
+    /* OTP Display - big */
+    .otp-section { text-align: center; }
+    .otp-big { font-size: 42px; font-weight: 700; letter-spacing: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; }
+    .otp-big.active { color: var(--green); }
+    .otp-big.none { color: var(--muted); }
+    .otp-info { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+    .otp-input-row { display: flex; gap: 6px; margin-top: 8px; }
+    .otp-input-row input { flex: 1; padding: 8px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 18px; letter-spacing: 4px; text-align: center; }
+    .otp-input-row input:focus { outline: none; border-color: var(--accent); }
+
+    .log-box { background: #06080e; border: 1px solid var(--border); border-radius: 6px; padding: 8px; height: 160px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; }
+    .log-box div { color: var(--muted); }
+    .log-box .ok { color: var(--green); }
+    .log-box .err { color: var(--red); }
+    .log-box .warn { color: var(--amber); }
+    .log-box .info { color: var(--accent); }
+
+    .stat-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .stat { flex: 1; background: var(--surface2); border-radius: 6px; padding: 8px; text-align: center; }
+    .stat .num { font-size: 20px; font-weight: 700; }
+    .stat .lbl { font-size: 10px; color: var(--muted); }
+
+    .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .user-info .email { color: var(--muted); }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; z-index: 999; transition: opacity 0.3s; opacity: 0; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    .toast.ok { background: var(--green); color: #000; }
+    .toast.err { background: var(--red); color: #fff; }
+    .toast.info { background: var(--accent); color: #000; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🅿️ <span>Smart Parking</span> Simulator</h1>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="badge offline" id="connBadge">● Disconnected</span>
+      <span style="font-size:11px;color:var(--muted)" id="userDisplay"></span>
+      <button class="btn btn-sm btn-outline hidden" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <!-- Login Screen -->
+  <div id="loginScreen">
+    <div class="login-box card">
+      <h2 style="margin-bottom:16px;font-size:20px">🔐 Sign In</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Login to receive OTP from Firebase</p>
+      <input type="email" id="loginEmail" placeholder="Email" value="parking@test.com" />
+      <input type="password" id="loginPassword" placeholder="Password" value="parking123" />
+      <button class="btn btn-primary btn-block btn-lg" id="loginBtn">Sign In</button>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="appScreen" class="main hidden">
+    <div class="left" style="display:flex;flex-direction:column;gap:12px">
+      <!-- LCD -->
+      <div class="card">
+        <div class="card-title">🖥️ LCD Display</div>
+        <div class="lcd"><div class="row" id="lcdRow0">SYSTEM READY</div><div class="row" id="lcdRow1">SMART PARKING</div></div>
+      </div>
+
+      <!-- Parking Slots -->
+      <div class="card">
+        <div class="card-title">🅿️ Slots — Click to simulate car parking</div>
+        <div class="slots-grid" id="slotsGrid"></div>
+      </div>
+
+      <!-- Status -->
+      <div class="card">
+        <div class="card-title">📊 Status</div>
+        <div class="stat-row">
+          <div class="stat"><div class="num" id="stTotal">4</div><div class="lbl">Total</div></div>
+          <div class="stat"><div class="num" id="stAvail">4</div><div class="lbl">Available</div></div>
+          <div class="stat"><div class="num" id="stOcc">0</div><div class="lbl">Occupied</div></div>
+          <div class="stat"><div class="num" id="stRes">0</div><div class="lbl">Reserved</div></div>
+        </div>
+        <div style="text-align:center;font-size:12px;font-weight:600;padding:4px;border-radius:4px" id="parkStatus">—</div>
+      </div>
+    </div>
+
+    <div class="right" style="display:flex;flex-direction:column;gap:12px">
+      <!-- OTP Display -->
+      <div class="card">
+        <div class="card-title">🔑 OTP from Booking</div>
+        <div class="otp-section">
+          <div class="otp-info" id="otpSlotInfo">Waiting for booking...</div>
+          <div class="otp-big none" id="otpDisplay">—</div>
+        </div>
+      </div>
+
+      <!-- Gates -->
+      <div class="card">
+        <div class="card-title">🚧 Gates</div>
+        <div class="gate-row">
+          <div class="gate">
+            <div class="gate-visual"><div class="gate-bar closed" id="entryBar"></div><div style="position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);font-size:16px;font-weight:700;opacity:0.2">ENTRY</div></div>
+            <div class="gate-label">Entry</div>
+            <div class="gate-st" id="entryStatus">CLOSED</div>
+            <div class="btn-group">
+              <button class="btn btn-sm btn-success" id="carAtGateBtn">🚗 Car at Gate</button>
+              <button class="btn btn-sm btn-primary" id="carPassedBtn" disabled>→ Passed</button>
+            </div>
+          </div>
+          <div class="gate">
+            <div class="gate-visual"><div class="gate-bar closed" id="exitBar"></div><div style="position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);font-size:16px;font-weight:700;opacity:0.2">EXIT</div></div>
+            <div class="gate-label">Exit</div>
+            <div class="gate-st" id="exitStatus">CLOSED</div>
+            <button class="btn btn-sm btn-amber" id="carAtExitBtn">🚗 Car at Exit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Serial Log -->
+      <div class="card" style="flex:1;display:flex;flex-direction:column">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📜 Serial Log</span>
+          <button class="btn btn-sm btn-outline" id="clearLogBtn">Clear</button>
+        </div>
+        <div class="log-box" id="logBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBHFT1kSAa0kwxfQQWK4ZSMcv-N0PdqIr8",
+      authDomain: "iot-smart-parking-49293.firebaseapp.com",
+      databaseURL: "https://iot-smart-parking-49293-default-rtdb.firebaseio.com",
+      projectId: "iot-smart-parking-49293",
+      storageBucket: "iot-smart-parking-49293.appspot.com",
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    const state = {
+      user: null, uid: null,
+      slots: { P1: null, P2: null, P3: null, P4: null },
+      currentOtp: null, currentSlotId: null,
+      entryOpen: false, exitOpen: false,
+      carAtGate: false, carAtEntry: false, passed: false, entryTimer: 0,
+      carAtExit: false, exitTimer: 0,
+      sensor: { P1: false, P2: false, P3: false, P4: false },
+      detected: { P1: false, P2: false, P3: false, P4: false },
+      detectTimer: { P1: 0, P2: 0, P3: 0, P4: 0 },
+    };
+
+    const $ = id => document.getElementById(id);
+    let toastTimeout;
+    function showToast(msg, t = 'info') { const e = $('toast'); e.textContent = msg; e.className = `toast ${t} show`; clearTimeout(toastTimeout); toastTimeout = setTimeout(() => e.classList.remove('show'), 2500); }
+
+    function log(msg, t = 'info') {
+      const box = $('logBox');
+      const d = document.createElement('div'); d.className = t;
+      const ts = new Date().toISOString().slice(11, 19);
+      d.textContent = `[${ts}] ${msg}`;
+      box.appendChild(d); box.scrollTop = box.scrollHeight;
+    }
+
+    // ===== Firebase Login =====
+    async function loginUser(email, password) {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        return cred.user;
+      } catch (e) {
+        log(`Login failed: ${e.message}`, 'err');
+        showToast('Login failed: ' + e.message, 'err');
+        return null;
+      }
+    }
+
+    // ===== OTP from Firebase (written by web app) =====
+    function watchEntryOtp() {
+      onValue(ref(db, 'liveAccess/entry'), (snap) => {
+        if (!snap.exists()) {
+          state.currentOtp = null;
+          state.currentSlotId = null;
+          updateUI();
+          return;
+        }
+        const data = snap.val();
+        if (data.active === true && data.otp && data.otp.length >= 4 && data.used !== true) {
+          // Check if not expired
+          if (data.expireAt > Date.now()) {
+            state.currentOtp = data.otp;
+            state.currentSlotId = data.slotId || null;
+            log(`OTP received: ${data.otp} for slot ${state.currentSlotId || '?'}`, 'ok');
+            showToast(`New OTP: ${data.otp}`, 'ok');
+          } else {
+            state.currentOtp = null;
+            state.currentSlotId = null;
+          }
+        } else {
+          state.currentOtp = null;
+          state.currentSlotId = null;
+        }
+        updateUI();
+      });
+    }
+
+    // ===== Watch OTP Requests from Web App (commands/gateRequests) =====
+    function watchGateRequests() {
+      const reqRef = ref(db, 'commands/gateRequests');
+      let lastRequestId = null;
+      onValue(reqRef, async (snap) => {
+        if (!snap.exists()) return;
+        const requests = snap.val();
+        // Find the latest pending request (not processed yet)
+        for (const [reqId, req] of Object.entries(requests)) {
+          if (req.status === 'pending' && reqId !== lastRequestId) {
+            lastRequestId = reqId;
+            log(`Gate request received: ${req.otp}`, 'warn');
+
+            // Validate OTP against liveAccess/entry
+            try {
+              const entrySnap = await get(ref(db, 'liveAccess/entry'));
+              let valid = false;
+              if (entrySnap.exists()) {
+                const d = entrySnap.val();
+                valid = (d.otp === req.otp && d.active === true && d.used !== true && d.expireAt > Date.now());
+              }
+
+              if (valid) {
+                await update(ref(db), {
+                  [`commands/gateRequests/${reqId}/status`]: 'granted',
+                  [`commands/gateRequests/${reqId}/message`]: 'OTP valid, gate opened',
+                  'liveAccess/entry/used': true,
+                  'liveAccess/entry/active': false,
+                  'gates/entry/open': true,
+                  'gates/entry/status': 'OPEN',
+                });
+                state.entryOpen = true;
+                state.entryTimer = Date.now();
+                log(`🚗 ENTRY GATE OPEN — OTP ${req.otp} valid`, 'ok');
+                showToast('Gate opened via web app!', 'ok');
+              } else {
+                await update(ref(db), {
+                  [`commands/gateRequests/${reqId}/status`]: 'denied',
+                  [`commands/gateRequests/${reqId}/message`]: 'Invalid or expired OTP',
+                });
+                log(`❌ Gate request DENIED — invalid OTP: ${req.otp}`, 'err');
+                showToast('Invalid OTP from web app', 'err');
+              }
+            } catch (e) {
+              log(`Gate request error: ${e.message}`, 'err');
+            }
+            updateUI();
+            break;
+          }
+        }
+      });
+    }
+
+    // ===== Exit Gate =====
+    function processExitGate() {
+      if (state.carAtExit && !state.exitOpen) {
+        state.exitOpen = true; state.exitTimer = Date.now();
+        log('Exit gate OPEN', 'ok');
+        updateUI();
+      }
+      if (state.exitOpen && Date.now() - state.exitTimer > 2500) {
+        state.exitOpen = false; state.carAtExit = false;
+        log('Exit gate CLOSED', 'info');
+        updateUI();
+      }
+    }
+
+    // ===== Slot Click (simulate parking) =====
+    function toggleSlot(id) {
+      const s = state.slots[id];
+      if (!s) return;
+      state.sensor[id] = !state.sensor[id];
+      if (!state.sensor[id]) {
+        state.detected[id] = false; state.detectTimer[id] = 0;
+        log(`Slot ${id}: emptied`, 'info');
+        updateUI(); return;
+      }
+
+      if (state.currentSlotId && state.entryOpen) {
+        if (id !== state.currentSlotId) {
+          log(`❌ WRONG SLOT! Reserved ${state.currentSlotId} but parked at ${id}`, 'err');
+          showToast(`Wrong slot! You reserved ${state.currentSlotId}`, 'err');
+          state.sensor[id] = false;
+          updateUI();
+          return;
+        }
+        log(`✅ Parked correctly at ${id}`, 'ok');
+        showToast(`Correct slot ${id}!`, 'ok');
+      }
+      state.detected[id] = true;
+      state.detectTimer[id] = Date.now();
+      updateUI();
+
+      setTimeout(async () => {
+        if (state.sensor[id] && state.detected[id] && Date.now() - state.detectTimer[id] >= 2000) {
+          await set(ref(db, `slots/${id}/sensor`), true);
+          await set(ref(db, `slots/${id}/occupied`), true);
+          await set(ref(db, `slots/${id}/status`), 'OCCUPIED');
+          log(`Slot ${id}: OCCUPIED (confirmed after 2s)`, 'warn');
+        }
+      }, 2000);
+    }
+
+    // ===== Firebase Sync =====
+    async function syncFromFirebase() {
+      try {
+        const [parkSnap, slotSnap] = await Promise.all([
+          get(ref(db, 'parking')),
+          get(ref(db, 'slots')),
+        ]);
+        if (parkSnap.exists()) {
+          const p = parkSnap.val();
+          $('stAvail').textContent = p.available ?? '?';
+          $('stOcc').textContent = p.occupied ?? '?';
+          $('parkStatus').textContent = (p.available > 0) ? 'OPEN' : 'FULL';
+          $('parkStatus').style.color = (p.available > 0) ? 'var(--green)' : 'var(--red)';
+        }
+        if (slotSnap.exists()) {
+          state.slots = slotSnap.val();
+          renderSlots();
+        }
+      } catch (e) { /* sync errors ok */ }
+      updateUI();
+    }
+
+    // ===== UI =====
+    function renderSlots() {
+      const grid = $('slotsGrid'); grid.innerHTML = '';
+      ['P1', 'P2', 'P3', 'P4'].forEach(id => {
+        const s = state.slots[id] || { status: 'EMPTY' };
+        const div = document.createElement('div'); div.className = 'slot';
+        let status = (s.status || 'EMPTY').toLowerCase();
+        let icon = '⬜';
+        if (status === 'occupied') icon = '🚗';
+        else if (status === 'reserved') icon = '📌';
+        else if (status === 'detected') icon = '🔍';
+
+        if (state.sensor[id]) {
+          if (state.detected[id]) { status = 'occupied'; icon = '🚗'; }
+          else { status = 'detected'; icon = '🔍'; }
+        }
+        div.classList.add(status);
+        div.innerHTML = `<div class="id">${id}</div><div class="icon">${icon}</div><div class="s">${status.toUpperCase()}</div>`;
+        div.onclick = () => toggleSlot(id);
+        grid.appendChild(div);
+      });
+    }
+
+    function updateUI() {
+      renderSlots();
+
+      // OTP display
+      const otpEl = $('otpDisplay');
+      const slotInfo = $('otpSlotInfo');
+      if (state.currentOtp) {
+        otpEl.textContent = state.currentOtp;
+        otpEl.className = 'otp-big active';
+        slotInfo.textContent = state.currentSlotId ? `Slot: ${state.currentSlotId}` : 'OTP ready';
+      } else {
+        otpEl.textContent = '—';
+        otpEl.className = 'otp-big none';
+        slotInfo.textContent = 'Waiting for booking...';
+      }
+
+      // LCD
+      if (state.entryOpen && state.currentOtp) {
+        $('lcdRow0').textContent = `GO TO ${state.currentSlotId || 'SLOT'}`;
+        $('lcdRow1').textContent = `OTP: ${state.currentOtp}`;
+      } else if (state.currentOtp) {
+        $('lcdRow0').textContent = `BOOKED ${state.currentSlotId || 'SLOT'}`;
+        $('lcdRow1').textContent = `OTP: ${state.currentOtp}`;
+      } else if (state.sensor.P1 || state.sensor.P2 || state.sensor.P3 || state.sensor.P4) {
+        const avail = Object.values(state.slots).filter(s => s && s.status === 'EMPTY').length;
+        $('lcdRow0').textContent = `FREE: ${avail}`;
+        $('lcdRow1').textContent = `OCC: ${4 - avail}`;
+      } else {
+        $('lcdRow0').textContent = 'SYSTEM READY';
+        $('lcdRow1').textContent = 'SMART PARKING';
+      }
+
+      // Gates
+      const eb = $('entryBar'); eb.className = `gate-bar ${state.entryOpen ? 'open' : 'closed'}`;
+      $('entryStatus').textContent = state.entryOpen ? 'OPEN' : 'CLOSED';
+      $('entryStatus').style.color = state.entryOpen ? 'var(--green)' : 'var(--muted)';
+      const exb = $('exitBar'); exb.className = `gate-bar ${state.exitOpen ? 'open' : 'closed'}`;
+      $('exitStatus').textContent = state.exitOpen ? 'OPEN' : 'CLOSED';
+      $('exitStatus').style.color = state.exitOpen ? 'var(--green)' : 'var(--muted)';
+      $('carPassedBtn').disabled = !state.carAtEntry;
+
+      // Stats
+      $('stTotal').textContent = '4';
+      $('stRes').textContent = Object.values(state.slots).filter(s => s && s.status === 'RESERVED').length;
+    }
+
+    // ===== Event Handlers =====
+    $('loginBtn').onclick = async () => {
+      const email = $('loginEmail').value.trim();
+      const pass = $('loginPassword').value.trim();
+      if (!email || !pass) { showToast('Enter email and password', 'err'); return; }
+      $('loginBtn').disabled = true; $('loginBtn').textContent = 'Signing in...';
+      const user = await loginUser(email, pass);
+      $('loginBtn').disabled = false; $('loginBtn').textContent = 'Sign In';
+      if (!user) return;
+      state.user = user; state.uid = user.uid;
+      $('loginScreen').classList.add('hidden');
+      $('appScreen').classList.remove('hidden');
+      $('connBadge').textContent = '● Connected';
+      $('connBadge').className = 'badge online';
+      $('userDisplay').textContent = user.email;
+      $('logoutBtn').classList.remove('hidden');
+      log(`Signed in as ${user.email}`, 'ok');
+      showToast(`Welcome ${user.email}!`, 'ok');
+
+      watchEntryOtp();
+      watchGateRequests();
+      await syncFromFirebase();
+      setInterval(syncFromFirebase, 3000);
+      setInterval(() => { processEntryGate(); processExitGate(); }, 1000);
+    };
+
+    $('logoutBtn').onclick = async () => {
+      await signOut(auth);
+      state.user = null; state.uid = null; state.currentOtp = null;
+      $('appScreen').classList.add('hidden');
+      $('loginScreen').classList.remove('hidden');
+      $('connBadge').textContent = '● Disconnected';
+      $('connBadge').className = 'badge offline';
+      $('userDisplay').textContent = '';
+      $('logoutBtn').classList.add('hidden');
+      log('Signed out', 'info');
+    };
+
+    $('carAtGateBtn').onclick = () => {
+      state.carAtGate = true;
+      log('🚗 Car at entry gate (sensor triggered)', 'warn');
+      processEntryGate();
+    };
+    $('carPassedBtn').onclick = () => {
+      if (state.carAtEntry) { state.passed = true; state.entryTimer = Date.now(); log('→ Car passed gate', 'ok'); }
+    };
+    $('carAtExitBtn').onclick = () => { state.carAtExit = true; processExitGate(); };
+    $('clearLogBtn').onclick = () => { $('logBox').innerHTML = ''; };
+
+    // Gate close timers
+    setInterval(() => {
+      if (state.carAtEntry && state.passed && Date.now() - state.entryTimer > 1500) {
+        state.entryOpen = false; state.carAtEntry = false; state.passed = false;
+        log('Entry gate CLOSED', 'info');
+        updateUI();
+      }
+      if (state.exitOpen && Date.now() - state.exitTimer > 2500) {
+        state.exitOpen = false; state.carAtExit = false;
+        updateUI();
+      }
+    }, 500);
+
+    log('Smart Parking Simulator loaded', 'info');
+    log('Login to receive OTP from web app bookings', 'info');
+  </script>
+</body>
+</html>

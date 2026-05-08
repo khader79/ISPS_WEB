@@ -2,788 +2,167 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🔧 Embedded Tools Suite | Smart Parking</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>⚡ Embedded Labs Pro | Ultimate Simulator + IDE</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-      :root {
-        --bg: #060a12;
-        --surface: #0d1424;
-        --surface2: #111827;
-        --border: #1f2d42;
-        --border2: #243447;
-        --accent: #00d4ff;
-        --accent2: #7c3aed;
-        --accent3: #10b981;
-        --accent4: #f59e0b;
-        --danger: #ef4444;
-        --text: #e2e8f0;
-        --muted: #64748b;
-        --code: #JetBrains Mono, monospace;
-      }
-
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        user-select: none;
       }
-
+      :root {
+        --bg: #0a0c14;
+        --surface: #0f1422;
+        --surface2: #131a2c;
+        --border: #1f2b44;
+        --accent: #00e0ff;
+        --accent2: #8b5cf6;
+        --accent3: #10b981;
+        --danger: #ef4444;
+        --text: #eef2ff;
+        --muted: #6b7280;
+      }
       body {
         background: var(--bg);
         color: var(--text);
-        font-family: "Syne", sans-serif;
-        min-height: 100vh;
-        overflow-x: hidden;
+        font-family: "Inter", sans-serif;
+        overflow: hidden;
+        height: 100vh;
       }
-
-      /* GRID BACKGROUND */
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-image:
-          linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-        background-size: 40px 40px;
-        pointer-events: none;
-        z-index: 0;
-      }
-
       .app {
-        position: relative;
-        z-index: 1;
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
+        height: 100vh;
       }
-
-      /* HEADER */
-      header {
-        background: rgba(13, 20, 36, 0.95);
+      /* Header */
+      .top-bar {
+        background: rgba(15, 20, 34, 0.95);
+        backdrop-filter: blur(12px);
         border-bottom: 1px solid var(--border);
-        padding: 0 24px;
+        padding: 6px 20px;
         display: flex;
         align-items: center;
-        gap: 0;
-        height: 56px;
-        backdrop-filter: blur(20px);
-        position: sticky;
-        top: 0;
-        z-index: 100;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
       }
-
-      .logo {
-        font-size: 18px;
+      .logo h2 {
+        font-size: 1.2rem;
         font-weight: 800;
         background: linear-gradient(135deg, var(--accent), var(--accent2));
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
-        margin-left: 32px;
-        white-space: nowrap;
       }
-
-      .tabs {
-        display: flex;
-        gap: 0;
-        height: 100%;
-      }
-
-      .tab-btn {
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        padding: 0 20px;
-        color: var(--muted);
-        cursor: pointer;
-        font-family: "Syne", sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        transition: all 0.2s;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        white-space: nowrap;
-      }
-
-      .tab-btn:hover {
-        color: var(--text);
-      }
-      .tab-btn.active {
-        color: var(--accent);
-        border-bottom-color: var(--accent);
-      }
-
-      .header-actions {
-        margin-right: auto;
+      .toolbar {
         display: flex;
         gap: 8px;
-        align-items: center;
       }
-
-      /* PANELS */
-      .panel {
-        display: none;
-        flex: 1;
-      }
-      .panel.active {
-        display: flex;
-        flex-direction: column;
-      }
-
-      /* ==============================
-   ARDUINO IDE
-============================== */
-      .ide-layout {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        grid-template-rows: 1fr;
-        height: calc(100vh - 56px);
-        gap: 0;
-      }
-
-      .ide-sidebar {
-        background: var(--surface);
-        border-left: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .ide-sidebar-header {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--muted);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      .file-tree {
-        padding: 8px;
-        flex: 1;
-        overflow-y: auto;
-      }
-
-      .file-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 8px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 13px;
-        color: var(--muted);
-        transition: all 0.15s;
-      }
-      .file-item:hover {
-        background: var(--border);
-        color: var(--text);
-      }
-      .file-item.active {
-        background: rgba(0, 212, 255, 0.1);
-        color: var(--accent);
-      }
-      .file-icon {
-        font-size: 14px;
-      }
-
-      .libs-section {
-        border-top: 1px solid var(--border);
-        padding: 8px;
-      }
-      .lib-item {
-        font-size: 11px;
-        padding: 5px 8px;
-        border-radius: 5px;
-        cursor: pointer;
-        color: var(--muted);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.15s;
-      }
-      .lib-item:hover {
-        color: var(--accent3);
-        background: rgba(16, 185, 129, 0.08);
-      }
-      .lib-item .lib-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--accent3);
-      }
-
-      .ide-main {
-        display: grid;
-        grid-template-rows: 40px 1fr 180px;
-        overflow: hidden;
-      }
-
-      .ide-toolbar {
+      .btn {
         background: var(--surface2);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 0 12px;
-      }
-
-      .ide-btn {
-        background: none;
-        border: 1px solid transparent;
-        padding: 4px 12px;
-        border-radius: 6px;
-        color: var(--muted);
-        cursor: pointer;
-        font-family: "Syne", sans-serif;
+        border: 1px solid var(--border);
+        padding: 5px 12px;
+        border-radius: 30px;
+        color: var(--text);
         font-size: 12px;
         font-weight: 600;
-        transition: all 0.15s;
-        display: flex;
+        cursor: pointer;
+        transition: 0.2s;
+        display: inline-flex;
         align-items: center;
         gap: 6px;
       }
-      .ide-btn:hover {
-        border-color: var(--border2);
-        color: var(--text);
+      .btn:hover {
+        background: rgba(0, 224, 255, 0.1);
+        border-color: var(--accent);
       }
-      .ide-btn.primary {
+      .btn-primary {
         background: var(--accent);
         color: #000;
         border-color: var(--accent);
-        font-weight: 700;
       }
-      .ide-btn.primary:hover {
-        background: #00b8d9;
-      }
-      .ide-btn.success {
-        background: var(--accent3);
-        color: #000;
-        border-color: var(--accent3);
-        font-weight: 700;
-      }
-      .ide-btn.danger {
-        background: var(--danger);
-        color: #fff;
-        border-color: var(--danger);
-      }
-
-      .board-select {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        color: var(--text);
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-family: "Syne", sans-serif;
-        margin-right: auto;
-      }
-
-      .editor-area {
-        display: grid;
-        grid-template-rows: 30px 1fr;
-        background: var(--bg);
-        overflow: hidden;
-      }
-
-      .editor-tabs {
-        background: var(--surface2);
-        border-bottom: 1px solid var(--border);
+      /* Main layout */
+      .main-grid {
         display: flex;
-        align-items: center;
-        padding: 0 8px;
-        gap: 0;
-      }
-
-      .editor-tab {
-        padding: 0 16px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        font-size: 12px;
-        color: var(--muted);
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
-        gap: 6px;
-        transition: all 0.15s;
-      }
-      .editor-tab.active {
-        color: var(--accent);
-        border-bottom-color: var(--accent);
-      }
-
-      .code-container {
-        display: grid;
-        grid-template-columns: 50px 1fr;
-        overflow: hidden;
-        position: relative;
-      }
-
-      .line-numbers {
-        background: var(--surface2);
-        padding: 16px 8px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
-        color: var(--muted);
-        text-align: right;
-        overflow: hidden;
-        user-select: none;
-        border-left: 1px solid var(--border);
-        line-height: 1.6;
-      }
-
-      #codeEditor {
-        background: var(--bg);
-        border: none;
-        padding: 16px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
-        color: var(--text);
-        resize: none;
-        outline: none;
-        line-height: 1.6;
-        overflow-y: auto;
-        tab-size: 2;
-        white-space: pre;
-        overflow-x: auto;
-      }
-
-      /* SERIAL MONITOR */
-      .serial-monitor {
-        border-top: 1px solid var(--border);
-        display: grid;
-        grid-template-rows: 36px 1fr 36px;
-        background: var(--surface2);
-      }
-
-      .serial-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 0 12px;
-        border-bottom: 1px solid var(--border);
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .serial-indicator {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--danger);
-        box-shadow: 0 0 8px var(--danger);
-      }
-      .serial-indicator.connected {
-        background: var(--accent3);
-        box-shadow: 0 0 8px var(--accent3);
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.5;
-        }
-      }
-
-      .serial-output {
-        padding: 8px 12px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 12px;
-        overflow-y: auto;
-        color: var(--accent3);
-        background: #050810;
-      }
-
-      .serial-line {
-        margin-bottom: 2px;
-      }
-      .serial-line.error {
-        color: var(--danger);
-      }
-      .serial-line.info {
-        color: var(--accent);
-      }
-      .serial-line.warn {
-        color: var(--accent4);
-      }
-
-      .serial-input-row {
-        display: flex;
-        border-top: 1px solid var(--border);
-      }
-
-      .serial-input {
         flex: 1;
-        background: none;
-        border: none;
-        padding: 0 12px;
-        color: var(--text);
-        font-family: "JetBrains Mono", monospace;
-        font-size: 12px;
-        outline: none;
+        overflow: hidden;
       }
-
-      .serial-send-btn {
-        background: var(--accent);
-        border: none;
-        padding: 0 16px;
-        color: #000;
-        font-weight: 700;
-        cursor: pointer;
-        font-size: 12px;
-        font-family: "Syne", sans-serif;
-      }
-
-      /* ==============================
-   WOKWI SIMULATOR
-============================== */
-      .sim-layout {
-        display: grid;
-        grid-template-columns: 260px 1fr 280px;
-        height: calc(100vh - 56px);
-      }
-
-      .sim-components {
+      /* Components panel */
+      .components-panel {
+        width: 280px;
         background: var(--surface);
         border-left: 1px solid var(--border);
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
-
-      .sim-search {
-        padding: 12px;
+      .panel-header {
+        padding: 10px 12px;
         border-bottom: 1px solid var(--border);
+        font-weight: 700;
+        font-size: 12px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
       }
-
-      .sim-search input {
-        width: 100%;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        color: var(--text);
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-family: "Syne", sans-serif;
-        outline: none;
-        transition: border-color 0.2s;
-      }
-      .sim-search input:focus {
-        border-color: var(--accent);
-      }
-
-      .components-list {
+      .comp-list {
         flex: 1;
         overflow-y: auto;
-        padding: 8px;
+        padding: 6px;
       }
-
-      .comp-category {
+      .comp-cat {
         font-size: 10px;
         font-weight: 700;
         color: var(--muted);
-        padding: 8px 8px 4px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
+        padding: 8px 6px 2px;
+        letter-spacing: 1px;
       }
-
       .comp-item {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 8px 10px;
-        border-radius: 8px;
+        padding: 6px 10px;
+        margin-bottom: 4px;
+        border-radius: 10px;
         cursor: grab;
-        font-size: 13px;
-        transition: all 0.15s;
-        user-select: none;
-        margin-bottom: 2px;
+        background: var(--surface2);
+        border: 1px solid transparent;
+        transition: 0.1s;
       }
       .comp-item:hover {
-        background: var(--border);
+        background: #1a2338;
+        border-color: var(--accent);
       }
-      .comp-item:active {
-        cursor: grabbing;
-      }
-
       .comp-icon {
+        font-size: 22px;
         width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        flex-shrink: 0;
-      }
-
-      .comp-info {
-        flex: 1;
+        text-align: center;
       }
       .comp-name {
         font-weight: 600;
         font-size: 12px;
       }
       .comp-desc {
-        font-size: 10px;
-        color: var(--muted);
-        margin-top: 1px;
-      }
-
-      /* CANVAS AREA */
-      .sim-canvas-area {
-        position: relative;
-        overflow: hidden;
-        background: #080d18;
-        cursor: default;
-      }
-
-      .sim-canvas-area::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image:
-          radial-gradient(
-            circle at 50% 50%,
-            rgba(0, 212, 255, 0.04) 0%,
-            transparent 70%
-          ),
-          linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
-        background-size:
-          100% 100%,
-          30px 30px,
-          30px 30px;
-        pointer-events: none;
-      }
-
-      #simCanvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-      }
-
-      .sim-toolbar {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        display: flex;
-        gap: 6px;
-        z-index: 10;
-      }
-
-      .sim-tool-btn {
-        background: rgba(13, 20, 36, 0.9);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 6px 12px;
-        color: var(--text);
-        cursor: pointer;
-        font-size: 12px;
-        font-family: "Syne", sans-serif;
-        font-weight: 600;
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        backdrop-filter: blur(10px);
-      }
-      .sim-tool-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-      .sim-tool-btn.run {
-        background: rgba(16, 185, 129, 0.15);
-        border-color: var(--accent3);
-        color: var(--accent3);
-      }
-      .sim-tool-btn.stop {
-        background: rgba(239, 68, 68, 0.15);
-        border-color: var(--danger);
-        color: var(--danger);
-      }
-
-      .sim-status {
-        position: absolute;
-        bottom: 12px;
-        right: 12px;
-        background: rgba(13, 20, 36, 0.9);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 6px 12px;
-        font-size: 11px;
-        font-family: "JetBrains Mono", monospace;
-        backdrop-filter: blur(10px);
+        font-size: 9px;
         color: var(--muted);
       }
-
-      /* PROPERTIES PANEL */
-      .sim-props {
-        background: var(--surface);
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .props-header {
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--border);
-        font-weight: 700;
-        font-size: 13px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .props-content {
+      /* Canvas area */
+      .canvas-area {
         flex: 1;
-        overflow-y: auto;
-        padding: 12px;
-      }
-
-      .prop-group {
-        margin-bottom: 16px;
-      }
-      .prop-group-title {
-        font-size: 10px;
-        font-weight: 700;
-        color: var(--muted);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-      }
-
-      .prop-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 6px;
-        align-items: center;
-      }
-
-      .prop-label {
-        font-size: 12px;
-        color: var(--muted);
-      }
-
-      .prop-input {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        color: var(--text);
-        padding: 5px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-family: "JetBrains Mono", monospace;
-        outline: none;
-        transition: border-color 0.2s;
-        width: 100%;
-      }
-      .prop-input:focus {
-        border-color: var(--accent);
-      }
-
-      .prop-select {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        color: var(--text);
-        padding: 5px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-family: "Syne", sans-serif;
-        outline: none;
-        width: 100%;
-      }
-
-      .sim-output {
-        border-top: 1px solid var(--border);
-        padding: 12px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 11px;
-        color: var(--accent3);
-        height: 120px;
-        overflow-y: auto;
+        position: relative;
         background: #050810;
-      }
-
-      /* CIRCUIT BUILDER (Tinkercad style) */
-      .circuit-layout {
-        display: grid;
-        grid-template-columns: 72px 1fr 300px;
-        height: calc(100vh - 56px);
-      }
-
-      .circuit-toolbox {
-        background: var(--surface);
-        border-left: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 8px 6px;
-        gap: 4px;
-        overflow-y: auto;
-      }
-
-      .tool-btn-circle {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        border: 2px solid var(--border);
-        background: var(--bg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 20px;
-        transition: all 0.15s;
-        flex-shrink: 0;
-        position: relative;
-      }
-      .tool-btn-circle:hover {
-        border-color: var(--accent);
-        box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
-      }
-      .tool-btn-circle.active {
-        border-color: var(--accent);
-        background: rgba(0, 212, 255, 0.1);
-      }
-
-      .tool-sep {
-        width: 32px;
-        height: 1px;
-        background: var(--border);
-        margin: 4px 0;
-      }
-
-      .circuit-canvas-wrap {
-        position: relative;
         overflow: hidden;
-        background: #060b14;
       }
-
-      .circuit-canvas-wrap::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 20px 20px;
-        pointer-events: none;
-      }
-
-      #circuitCanvas {
+      canvas {
         position: absolute;
         top: 0;
         left: 0;
@@ -791,2811 +170,1076 @@
         height: 100%;
         cursor: crosshair;
       }
-
-      .circuit-toolbar {
+      .canvas-tools {
         position: absolute;
         top: 12px;
         right: 12px;
         display: flex;
-        flex-direction: column;
         gap: 6px;
         z-index: 10;
       }
-
-      .circuit-panel {
+      /* Properties panel */
+      .props-panel {
+        width: 300px;
         background: var(--surface);
         border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
-
-      .circuit-panel-tabs {
+      .props-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+      }
+      .prop-group {
+        margin-bottom: 20px;
+      }
+      .prop-label {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 4px;
+        display: block;
+      }
+      .prop-value {
+        background: var(--surface2);
+        border-radius: 10px;
+        padding: 6px 10px;
+        font-family: monospace;
+        font-size: 12px;
+        border: 1px solid var(--border);
+        width: 100%;
+        color: var(--text);
+      }
+      /* IDE footer */
+      .ide-container {
+        height: 300px;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
         display: flex;
+        flex-direction: column;
+      }
+      .ide-tabs {
+        display: flex;
+        background: var(--surface2);
         border-bottom: 1px solid var(--border);
       }
-      .circuit-panel-tab {
-        flex: 1;
-        padding: 10px;
-        text-align: center;
+      .ide-tab {
+        padding: 6px 20px;
+        cursor: pointer;
         font-size: 12px;
         font-weight: 600;
-        cursor: pointer;
         color: var(--muted);
         border-bottom: 2px solid transparent;
-        transition: all 0.15s;
       }
-      .circuit-panel-tab.active {
+      .ide-tab.active {
         color: var(--accent);
         border-bottom-color: var(--accent);
       }
-
-      .circuit-panel-content {
+      .ide-pane {
         flex: 1;
-        overflow-y: auto;
-        padding: 12px;
-      }
-
-      /* Components grid in circuit panel */
-      .circuit-comp-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-
-      .circuit-comp-card {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 10px;
-        text-align: center;
-        cursor: grab;
-        transition: all 0.15s;
-        font-size: 11px;
-      }
-      .circuit-comp-card:hover {
-        border-color: var(--accent);
-        transform: translateY(-1px);
-      }
-      .circuit-comp-card:active {
-        cursor: grabbing;
-      }
-      .circuit-comp-card .cc-icon {
-        font-size: 24px;
-        margin-bottom: 4px;
-      }
-      .circuit-comp-card .cc-name {
-        color: var(--text);
-        font-weight: 600;
-      }
-      .circuit-comp-card .cc-sub {
-        color: var(--muted);
-        font-size: 10px;
-      }
-
-      /* ESP32 Board Visual */
-      .board-visual {
-        border-top: 1px solid var(--border);
-        padding: 12px;
-      }
-      .board-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--muted);
-        letter-spacing: 0.1em;
-        margin-bottom: 10px;
-      }
-
-      .esp32-board {
-        background: #0a2218;
-        border: 2px solid #1a5c38;
-        border-radius: 8px;
-        padding: 10px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 9px;
-      }
-
-      .board-header {
-        color: #22c55e;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 8px;
-        font-size: 10px;
-      }
-
-      .pin-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 3px;
-      }
-      .pin {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 5px;
-        border-radius: 3px;
-        cursor: pointer;
-        transition: background 0.1s;
-      }
-      .pin:hover {
-        background: rgba(34, 197, 94, 0.1);
-      }
-      .pin-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        border: 1px solid;
-        flex-shrink: 0;
-      }
-      .pin-dot.gpio {
-        background: #22c55e44;
-        border-color: #22c55e;
-      }
-      .pin-dot.power {
-        background: #ef444444;
-        border-color: #ef4444;
-      }
-      .pin-dot.gnd {
-        background: #33333399;
-        border-color: #666;
-      }
-      .pin-dot.adc {
-        background: #f59e0b44;
-        border-color: #f59e0b;
-      }
-      .pin-label {
-        color: #94a3b8;
-        font-size: 9px;
-      }
-
-      /* Scrollbar styling */
-      ::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--border2);
-        border-radius: 2px;
-      }
-
-      /* General btn */
-      .btn {
-        background: none;
-        border: 1px solid var(--border);
-        color: var(--text);
-        padding: 6px 14px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-family: "Syne", sans-serif;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-      .btn.accent {
-        background: var(--accent);
-        border-color: var(--accent);
-        color: #000;
-      }
-      .btn.accent:hover {
-        background: #00b8d9;
-      }
-      .btn.green {
-        background: var(--accent3);
-        border-color: var(--accent3);
-        color: #000;
-      }
-
-      /* tooltip */
-      .tooltip {
-        position: absolute;
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 4px 8px;
-        font-size: 10px;
-        white-space: nowrap;
-        pointer-events: none;
-        z-index: 1000;
-        display: none;
-      }
-
-      /* Status badge */
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 8px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-      }
-      .badge.green {
-        background: rgba(16, 185, 129, 0.15);
-        color: var(--accent3);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-      }
-      .badge.yellow {
-        background: rgba(245, 158, 11, 0.15);
-        color: var(--accent4);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-      }
-      .badge.red {
-        background: rgba(239, 68, 68, 0.15);
-        color: var(--danger);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-      }
-      .badge.blue {
-        background: rgba(0, 212, 255, 0.1);
-        color: var(--accent);
-        border: 1px solid rgba(0, 212, 255, 0.2);
-      }
-
-      /* Notifications */
-      #notif {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        z-index: 9999;
+        overflow: hidden;
       }
-      .notif-item {
-        padding: 10px 16px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        animation: slideIn 0.3s ease;
-        max-width: 300px;
+      .editor-area {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
       }
-      @keyframes slideIn {
-        from {
-          transform: translateX(-20px);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
+      .line-numbers {
+        width: 45px;
+        background: #0d1117;
+        padding: 8px 4px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        text-align: right;
+        color: var(--muted);
+        border-left: 1px solid var(--border);
+        overflow: hidden;
       }
-      .notif-item.success {
-        background: rgba(16, 185, 129, 0.2);
-        border: 1px solid var(--accent3);
+      #codeEditor {
+        flex: 1;
+        background: #0a0c14;
+        border: none;
+        color: var(--text);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        resize: none;
+        outline: none;
+        padding: 8px;
+        line-height: 1.4;
+      }
+      .serial-pane {
+        display: none;
+        flex-direction: column;
+        background: #05070e;
+        height: 100%;
+      }
+      .serial-output {
+        flex: 1;
+        overflow-y: auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        padding: 8px;
         color: var(--accent3);
+        direction: ltr;
+        white-space: pre-wrap;
       }
-      .notif-item.error {
-        background: rgba(239, 68, 68, 0.2);
-        border: 1px solid var(--danger);
-        color: var(--danger);
+      .serial-input-row {
+        display: flex;
+        border-top: 1px solid var(--border);
       }
-      .notif-item.info {
-        background: rgba(0, 212, 255, 0.1);
-        border: 1px solid var(--accent);
-        color: var(--accent);
+      .serial-input {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 8px;
+        color: var(--text);
+        font-family: monospace;
+        outline: none;
       }
-
-      .divider {
-        width: 1px;
-        height: 24px;
-        background: var(--border);
-        margin: 0 4px;
-      }
-
-      /* waveform */
-      canvas.wave {
-        image-rendering: pixelated;
+      .serial-send {
+        background: var(--accent);
+        border: none;
+        padding: 0 16px;
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <div
-      style="
-        background: #0f172a;
-        padding: 12px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #1f2d42;
-      ">
-      <h3 style="color: #e2e8f0; font-weight: 700">
-        <i class="fas fa-microchip"></i> Embedded Tools Suite
-      </h3>
-      <button
-        onclick="
-          window.parent.document
-            .querySelector('.nav-item[data-section=\'dashboard\']')
-            .click()
-        "
-        style="
-          background: #3b82f6;
-          border: none;
-          padding: 6px 16px;
-          border-radius: 40px;
-          color: white;
-          cursor: pointer;
-          font-weight: 600;
-        ">
-        <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
-      </button>
-    </div>
     <div class="app">
-      <!-- HEADER -->
-      <header>
-        <div class="logo">⚡ EmbeddedKit</div>
-        <div class="tabs">
-          <button class="tab-btn active" data-panel="ide">
-            <span>💻</span> Arduino IDE
+      <div class="top-bar">
+        <div class="logo"><h2>⚡ Embedded Labs Ultimate</h2></div>
+        <div class="toolbar">
+          <button class="btn" onclick="saveProject()">
+            <i class="fas fa-save"></i> حفظ
           </button>
-          <button class="tab-btn" data-panel="simulator">
-            <span>🔬</span> Circuit Simulator
+          <button class="btn" onclick="loadProject()">
+            <i class="fas fa-folder-open"></i> فتح
           </button>
-          <button class="tab-btn" data-panel="circuit">
-            <span>🔌</span> Circuit Builder
+          <button class="btn" onclick="clearCanvas()">
+            <i class="fas fa-trash"></i> مسح الكل
+          </button>
+          <button class="btn btn-primary" onclick="runSimulation()">
+            <i class="fas fa-play"></i> محاكاة
+          </button>
+          <button class="btn" onclick="stopSimulation()">
+            <i class="fas fa-stop"></i> إيقاف
           </button>
         </div>
-        <div class="header-actions">
-          <span class="badge blue" id="connectionStatus">🔵 غير متصل</span>
-          <button class="btn accent" onclick="connectSerial()">
-            🔗 اتصال USB
-          </button>
-        </div>
-      </header>
-
-      <!-- ======================== -->
-      <!-- ARDUINO IDE PANEL       -->
-      <!-- ======================== -->
-      <div class="panel active" id="panel-ide">
-        <div class="ide-layout">
-          <!-- Sidebar -->
-          <div class="ide-sidebar">
-            <div class="ide-sidebar-header">📁 الملفات</div>
-            <div class="file-tree">
-              <div class="file-item active" onclick="selectFile(this, 'main')">
-                <span class="file-icon">📄</span> main.ino
-              </div>
-              <div class="file-item" onclick="selectFile(this, 'wifi')">
-                <span class="file-icon">📄</span> wifi_manager.h
-              </div>
-              <div class="file-item" onclick="selectFile(this, 'firebase')">
-                <span class="file-icon">📄</span> firebase_helper.h
-              </div>
-              <div class="file-item" onclick="selectFile(this, 'parking')">
-                <span class="file-icon">📄</span> parking_logic.h
-              </div>
-              <div class="file-item" onclick="selectFile(this, 'sensors')">
-                <span class="file-icon">📄</span> sensors.h
-              </div>
-            </div>
-            <div class="libs-section">
-              <div class="ide-sidebar-header">📦 مكتبات</div>
-              <div class="lib-item">
-                <span class="lib-dot"></span> Firebase ESP32
-              </div>
-              <div class="lib-item"><span class="lib-dot"></span> WiFi.h</div>
-              <div class="lib-item">
-                <span class="lib-dot"></span> ArduinoJson
-              </div>
-              <div class="lib-item"><span class="lib-dot"></span> Servo.h</div>
-              <div class="lib-item">
-                <span class="lib-dot"></span> HCSR04 (Ultrasonic)
-              </div>
-              <div class="lib-item">
-                <span class="lib-dot"></span> ESP32Servo
-              </div>
-              <div
-                class="lib-item"
-                style="color: var(--accent); cursor: pointer"
-                onclick="notify('قريباً: مدير المكتبات', 'info')">
-                <span style="color: var(--accent)">+</span> إضافة مكتبة
-              </div>
-            </div>
+      </div>
+      <div class="main-grid">
+        <div class="components-panel">
+          <div class="panel-header">
+            <i class="fas fa-microchip"></i> مكتبة القطع (30+)
           </div>
-
-          <!-- Main Editor Area -->
-          <div class="ide-main">
-            <!-- Toolbar -->
-            <div class="ide-toolbar">
-              <button class="ide-btn primary" onclick="verifyCode()">
-                ✔ تحقق
-              </button>
-              <button class="ide-btn success" onclick="uploadCode()">
-                ⬆ رفع
-              </button>
-              <button
-                class="ide-btn"
-                id="runSimulationBtn"
-                style="background: #10b981; color: #000">
-                ▶ تشغيل المحاكاة
-              </button>
-              <button
-                class="ide-btn danger"
-                id="stopSimulationBtn"
-                style="display: none">
-                ⏹ إيقاف المحاكاة
-              </button>
-              <div class="divider"></div>
-              <button class="ide-btn" onclick="newFile()">📄 جديد</button>
-              <button class="ide-btn" onclick="openFile()">📂 فتح</button>
-              <button class="ide-btn" onclick="saveFile()">💾 حفظ</button>
-              <div class="divider"></div>
-              <button class="ide-btn" onclick="formatCode()">✨ تنسيق</button>
-              <button class="ide-btn" onclick="clearSerial()">
-                🗑 مسح المنفذ
-              </button>
-              <div class="divider"></div>
-              <select class="board-select" id="ideBoard">
-                <option value="esp32">ESP32 Dev Module</option>
-                <option value="esp32s3">ESP32-S3</option>
-                <option value="esp8266">ESP8266 NodeMCU</option>
-                <option value="uno">Arduino Uno</option>
-                <option value="mega">Arduino Mega</option>
-                <option value="nano">Arduino Nano</option>
-              </select>
-              <select
-                class="board-select"
-                id="idePort"
-                style="margin-right: 4px">
-                <option value="">-- اختر منفذ --</option>
-              </select>
-              <button class="ide-btn" onclick="scanPorts()">🔍</button>
-              <div class="divider"></div>
-              <span
-                style="
-                  font-size: 11px;
-                  color: var(--muted);
-                  font-family: &quot;JetBrains Mono&quot;, monospace;
-                "
-                id="ideStatus"
-                >جاهز</span
-              >
-            </div>
-
-            <!-- Editor Tabs + Code -->
-            <div class="editor-area">
-              <div class="editor-tabs">
-                <div class="editor-tab active" id="activeTabLabel">
-                  main.ino
-                </div>
-              </div>
-              <div class="code-container">
-                <div class="line-numbers" id="lineNumbers">1</div>
-                <textarea
-                  id="codeEditor"
-                  spellcheck="false"
-                  autocomplete="off"></textarea>
-              </div>
-            </div>
-
-            <!-- Serial Monitor -->
-            <div class="serial-monitor">
-              <div class="serial-header">
-                <div class="serial-indicator" id="serialIndicator"></div>
-                <span>Serial Monitor</span>
-                <select
-                  class="board-select"
-                  id="baudRate"
-                  style="margin-right: auto">
-                  <option>9600</option>
-                  <option>57600</option>
-                  <option selected>115200</option>
-                  <option>230400</option>
-                </select>
-                <button class="ide-btn" onclick="clearSerial()">مسح</button>
-                <button
-                  class="ide-btn"
-                  onclick="toggleAutoScroll()"
-                  id="autoScrollBtn">
-                  ⬇ Auto
-                </button>
-              </div>
-              <div class="serial-output" id="serialOutput">
-                <div class="serial-line info">
-                  // Serial Monitor - في انتظار الاتصال...
-                </div>
-              </div>
-              <div class="serial-input-row">
-                <input
-                  class="serial-input"
-                  id="serialInput"
-                  placeholder="اكتب أمراً وأرسله..."
-                  onkeydown="handleSerialKey(event)" />
-                <button class="serial-send-btn" onclick="sendSerial()">
-                  إرسال
-                </button>
-              </div>
+          <div class="comp-list" id="compList"></div>
+        </div>
+        <div class="canvas-area" id="canvasArea">
+          <canvas id="circuitCanvas"></canvas>
+          <div class="canvas-tools">
+            <button class="btn" onclick="fitView()">📐 ملائمة</button>
+            <button class="btn" onclick="deleteLastWire()">
+              🗑️ حذف آخر سلك
+            </button>
+          </div>
+        </div>
+        <div class="props-panel" id="propsPanel">
+          <div class="panel-header">
+            <i class="fas fa-sliders-h"></i> الخصائص الحية
+          </div>
+          <div class="props-content" id="propsContent">
+            <div style="color: var(--muted); text-align: center; padding: 20px">
+              اختر قطعة لعرض خصائصها
             </div>
           </div>
         </div>
       </div>
-
-      <!-- ======================== -->
-      <!-- CIRCUIT SIMULATOR       -->
-      <!-- ======================== -->
-      <div class="panel" id="panel-simulator">
-        <div class="sim-layout">
-          <!-- Components List -->
-          <div class="sim-components">
-            <div class="sim-search">
-              <input
-                type="text"
-                placeholder="🔍 ابحث عن قطعة..."
-                id="compSearch"
-                oninput="filterComponents(this.value)" />
-            </div>
-            <div class="components-list" id="componentsList">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-
-          <!-- Canvas -->
-          <div class="sim-canvas-area" id="simCanvasArea">
-            <canvas id="simCanvas"></canvas>
-            <div class="sim-toolbar">
-              <button
-                class="sim-tool-btn run"
-                onclick="runSimulation()"
-                id="runBtn">
-                ▶ تشغيل
-              </button>
-              <button
-                class="sim-tool-btn stop"
-                onclick="stopSimulation()"
-                id="stopBtn"
-                style="display: none">
-                ⏹ إيقاف
-              </button>
-              <button class="sim-tool-btn" onclick="clearSimCanvas()">
-                🗑 مسح
-              </button>
-              <button class="sim-tool-btn" onclick="zoomIn()">🔍+</button>
-              <button class="sim-tool-btn" onclick="zoomOut()">🔍-</button>
-            </div>
-            <div class="sim-status" id="simStatus">
-              جاهز | اسحب القطع للإضافة
-            </div>
-          </div>
-
-          <!-- Properties -->
-          <div class="sim-props">
-            <div class="props-header">🔧 الخصائص</div>
-            <div class="props-content" id="propsContent">
-              <div
-                style="
-                  color: var(--muted);
-                  font-size: 13px;
-                  text-align: center;
-                  padding: 20px;
-                ">
-                اختر قطعة لعرض خصائصها
-              </div>
-            </div>
-            <div class="sim-output" id="simOutput">
-              // نتائج المحاكاة ستظهر هنا...
-            </div>
+      <div class="ide-container">
+        <div class="ide-tabs">
+          <div class="ide-tab active" data-tab="code">📝 Code Editor</div>
+          <div class="ide-tab" data-tab="serial">📡 Serial Monitor</div>
+        </div>
+        <div class="ide-pane" id="codePane">
+          <div class="editor-area">
+            <div class="line-numbers" id="lineNumbers">1</div>
+            <textarea id="codeEditor" spellcheck="false"></textarea>
           </div>
         </div>
-      </div>
-
-      <!-- ======================== -->
-      <!-- CIRCUIT BUILDER         -->
-      <!-- ======================== -->
-      <div class="panel" id="panel-circuit">
-        <div class="circuit-layout">
-          <!-- Toolbox -->
-          <div class="circuit-toolbox">
-            <div
-              class="tool-btn-circle active"
-              id="tool-select"
-              onclick="setTool('select')"
-              title="اختيار">
-              🖱️
-            </div>
-            <div
-              class="tool-btn-circle"
-              id="tool-wire"
-              onclick="setTool('wire')"
-              title="سلك">
-              〰️
-            </div>
-            <div
-              class="tool-btn-circle"
-              id="tool-text"
-              onclick="setTool('text')"
-              title="نص">
-              T
-            </div>
-            <div class="tool-sep"></div>
-            <div
-              class="tool-btn-circle"
-              onclick="rotateSelected()"
-              title="تدوير">
-              🔄
-            </div>
-            <div class="tool-btn-circle" onclick="deleteSelected()" title="حذف">
-              🗑️
-            </div>
-            <div
-              class="tool-btn-circle"
-              onclick="duplicateSelected()"
-              title="نسخ">
-              📋
-            </div>
-            <div class="tool-sep"></div>
-            <div class="tool-btn-circle" onclick="undo()" title="تراجع">↩️</div>
-            <div class="tool-btn-circle" onclick="redo()" title="إعادة">↪️</div>
-            <div class="tool-sep"></div>
-            <div
-              class="tool-btn-circle"
-              onclick="exportCircuit()"
-              title="تصدير">
-              📤
-            </div>
-            <div class="tool-btn-circle" onclick="saveCircuit()" title="حفظ">
-              💾
-            </div>
-          </div>
-
-          <!-- Circuit Canvas -->
-          <div class="circuit-canvas-wrap" id="circuitCanvasWrap">
-            <canvas id="circuitCanvas"></canvas>
-            <div class="circuit-toolbar">
-              <button class="sim-tool-btn" onclick="fitToScreen()">
-                📐 ملاءمة
-              </button>
-              <button class="sim-tool-btn" onclick="toggleGrid()">
-                # شبكة
-              </button>
-            </div>
-          </div>
-
-          <!-- Panel -->
-          <div class="circuit-panel">
-            <div class="circuit-panel-tabs">
-              <div
-                class="circuit-panel-tab active"
-                onclick="switchCircuitTab('components', this)">
-                القطع
-              </div>
-              <div
-                class="circuit-panel-tab"
-                onclick="switchCircuitTab('properties', this)">
-                الخصائص
-              </div>
-              <div
-                class="circuit-panel-tab"
-                onclick="switchCircuitTab('board', this)">
-                ESP32
-              </div>
-            </div>
-
-            <div class="circuit-panel-content" id="circuitTabContent">
-              <!-- Components tab (default) -->
-              <div id="circuitTab-components">
-                <div
-                  style="
-                    font-size: 10px;
-                    color: var(--muted);
-                    margin-bottom: 10px;
-                    letter-spacing: 0.05em;
-                  ">
-                  MICROCONTROLLERS
-                </div>
-                <div class="circuit-comp-grid">
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'esp32')"
-                    onclick="placeComp('esp32')">
-                    <div class="cc-icon">🟢</div>
-                    <div class="cc-name">ESP32</div>
-                    <div class="cc-sub">Dev Module</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'uno')"
-                    onclick="placeComp('uno')">
-                    <div class="cc-icon">🔵</div>
-                    <div class="cc-name">Arduino</div>
-                    <div class="cc-sub">Uno R3</div>
-                  </div>
-                </div>
-
-                <div
-                  style="
-                    font-size: 10px;
-                    color: var(--muted);
-                    margin: 12px 0 8px;
-                    letter-spacing: 0.05em;
-                  ">
-                  SENSORS
-                </div>
-                <div class="circuit-comp-grid">
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'hcsr04')"
-                    onclick="placeComp('hcsr04')">
-                    <div class="cc-icon">📡</div>
-                    <div class="cc-name">HC-SR04</div>
-                    <div class="cc-sub">Ultrasonic</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'pir')"
-                    onclick="placeComp('pir')">
-                    <div class="cc-icon">👁️</div>
-                    <div class="cc-name">PIR</div>
-                    <div class="cc-sub">Motion</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'dht22')"
-                    onclick="placeComp('dht22')">
-                    <div class="cc-icon">🌡️</div>
-                    <div class="cc-name">DHT22</div>
-                    <div class="cc-sub">Temp/Hum</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'ldr')"
-                    onclick="placeComp('ldr')">
-                    <div class="cc-icon">💡</div>
-                    <div class="cc-name">LDR</div>
-                    <div class="cc-sub">Light</div>
-                  </div>
-                </div>
-
-                <div
-                  style="
-                    font-size: 10px;
-                    color: var(--muted);
-                    margin: 12px 0 8px;
-                    letter-spacing: 0.05em;
-                  ">
-                  OUTPUT
-                </div>
-                <div class="circuit-comp-grid">
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'led')"
-                    onclick="placeComp('led')">
-                    <div class="cc-icon">🔴</div>
-                    <div class="cc-name">LED</div>
-                    <div class="cc-sub">5mm</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'servo')"
-                    onclick="placeComp('servo')">
-                    <div class="cc-icon">⚙️</div>
-                    <div class="cc-name">Servo</div>
-                    <div class="cc-sub">SG90</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'lcd')"
-                    onclick="placeComp('lcd')">
-                    <div class="cc-icon">🖥️</div>
-                    <div class="cc-name">LCD 16x2</div>
-                    <div class="cc-sub">I2C</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    draggable="true"
-                    ondragstart="dragComp(event, 'buzzer')"
-                    onclick="placeComp('buzzer')">
-                    <div class="cc-icon">🔔</div>
-                    <div class="cc-name">Buzzer</div>
-                    <div class="cc-sub">Active</div>
-                  </div>
-                </div>
-
-                <div
-                  style="
-                    font-size: 10px;
-                    color: var(--muted);
-                    margin: 12px 0 8px;
-                    letter-spacing: 0.05em;
-                  ">
-                  PASSIVE
-                </div>
-                <div class="circuit-comp-grid">
-                  <div
-                    class="circuit-comp-card"
-                    onclick="placeComp('resistor')">
-                    <div class="cc-icon">〰️</div>
-                    <div class="cc-name">مقاومة</div>
-                    <div class="cc-sub">Resistor</div>
-                  </div>
-                  <div
-                    class="circuit-comp-card"
-                    onclick="placeComp('capacitor')">
-                    <div class="cc-icon">⊣⊢</div>
-                    <div class="cc-name">مكثف</div>
-                    <div class="cc-sub">Capacitor</div>
-                  </div>
-                  <div class="circuit-comp-card" onclick="placeComp('battery')">
-                    <div class="cc-icon">🔋</div>
-                    <div class="cc-name">بطارية</div>
-                    <div class="cc-sub">9V</div>
-                  </div>
-                  <div class="circuit-comp-card" onclick="placeComp('button')">
-                    <div class="cc-icon">🔘</div>
-                    <div class="cc-name">زر</div>
-                    <div class="cc-sub">Push Button</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Properties tab (hidden) -->
-              <div id="circuitTab-properties" style="display: none">
-                <div
-                  style="
-                    color: var(--muted);
-                    font-size: 13px;
-                    padding: 20px;
-                    text-align: center;
-                  ">
-                  اختر قطعة لرؤية خصائصها
-                </div>
-              </div>
-
-              <!-- ESP32 board tab (hidden) -->
-              <div id="circuitTab-board" style="display: none">
-                <div class="board-visual">
-                  <div class="board-title">ESP32 PINOUT</div>
-                  <div class="esp32-board">
-                    <div class="board-header">ESP32 DevKit v1</div>
-                    <div class="pin-grid" id="esp32Pinout"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div class="ide-pane" id="serialPane" style="display: none">
+          <div class="serial-output" id="serialOutput"></div>
+          <div class="serial-input-row">
+            <input
+              class="serial-input"
+              id="serialInput"
+              placeholder="أرسل أمراً..."
+              onkeypress="if (event.key === 'Enter') sendSerialCmd();" />
+            <button class="serial-send" onclick="sendSerialCmd()">إرسال</button>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Notifications -->
-    <div id="notif"></div>
 
     <script>
-      // ==============================
-      // GLOBALS
-      // ==============================
-      let serialPort = null;
-      let serialReader = null;
-      let serialWriter = null;
-      let isConnected = false;
-      let autoScroll = true;
-      let isSimRunning = false;
-      let currentTool = "select";
-      let simComponents = [];
-      let circuitComponents = [];
-      let selectedComp = null;
-      let circuitHistory = [];
-      let historyIndex = -1;
-      let simInterval = null;
-      let simZoom = 1;
-      let gridVisible = true;
-
-      const files = {
-        main: `#include <WiFi.h>
-#include <Firebase_ESP_Client.h>
-#include <ESP32Servo.h>
-
-// ==============================
-// إعدادات WiFi و Firebase
-// ==============================
-#define WIFI_SSID      "اسم_الشبكة"
-#define WIFI_PASSWORD  "كلمة_المرور"
-#define API_KEY        "مفتاح_API"
-#define DATABASE_URL   "https://iot-smart-parking-xxxx.firebaseio.com"
-
-// ==============================
-// أرقام المنافذ
-// ==============================
-#define ENTRY_SERVO_PIN  18
-#define EXIT_SERVO_PIN   19
-#define SENSOR_1         25
-#define SENSOR_2         26
-#define SENSOR_3         27
-#define SENSOR_4         14
-#define LED_RED          32
-#define LED_GREEN        33
-#define BUZZER           23
-
-// ==============================
-// المتغيرات العامة
-// ==============================
-FirebaseData fbdo;
-FirebaseAuth auth;
-FirebaseConfig config;
-Servo entryServo, exitServo;
-bool slots[4] = {false, false, false, false};
-unsigned long lastHeartbeat = 0;
-
-// ==============================
-void setup() {
-  Serial.begin(115200);
-  Serial.println("🚗 Smart Parking ESP32 Starting...");
-
-  // إعداد المنافذ
-  pinMode(SENSOR_1, INPUT);
-  pinMode(SENSOR_2, INPUT);
-  pinMode(SENSOR_3, INPUT);
-  pinMode(SENSOR_4, INPUT);
-  pinMode(LED_RED,   OUTPUT);
-  pinMode(LED_GREEN, OUTPUT);
-  pinMode(BUZZER,    OUTPUT);
-
-  entryServo.attach(ENTRY_SERVO_PIN);
-  exitServo.attach(EXIT_SERVO_PIN);
-  entryServo.write(0);
-  exitServo.write(0);
-
-  // اتصال WiFi
-  connectWiFi();
-  
-  // إعداد Firebase
-  config.api_key = API_KEY;
-  config.database_url = DATABASE_URL;
-  Firebase.begin(&config, &auth);
-  Firebase.reconnectWiFi(true);
-  
-  Serial.println("✅ النظام جاهز");
-  digitalWrite(LED_GREEN, HIGH);
-}
-
-void loop() {
-  readSensors();
-  
-  // نبضة القلب كل 10 ثواني
-  if (millis() - lastHeartbeat > 10000) {
-    sendHeartbeat();
-    lastHeartbeat = millis();
-  }
-  
-  // التحقق من أوامر البوابة
-  checkGateCommands();
-  
-  delay(500);
-}
-
-void connectWiFi() {
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("جاري الاتصال بـ WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    digitalWrite(LED_RED, !digitalRead(LED_RED));
-  }
-  Serial.println("\\n✅ WiFi متصل: " + WiFi.localIP().toString());
-  digitalWrite(LED_RED, LOW);
-}
-
-void readSensors() {
-  bool changed = false;
-  bool readings[4] = {
-    !digitalRead(SENSOR_1),
-    !digitalRead(SENSOR_2),
-    !digitalRead(SENSOR_3),
-    !digitalRead(SENSOR_4)
-  };
-  
-  for (int i = 0; i < 4; i++) {
-    if (readings[i] != slots[i]) {
-      slots[i] = readings[i];
-      changed = true;
-      String path = "slots/slot" + String(i+1) + "/occupied";
-      Firebase.RTDB.setBool(&fbdo, path.c_str(), slots[i]);
-    }
-  }
-  
-  if (changed) {
-    Serial.println("📊 تحديث المواقف:");
-    for (int i = 0; i < 4; i++) {
-      Serial.println("  موقف " + String(i+1) + ": " + (slots[i] ? "مشغول" : "متاح"));
-    }
-  }
-}
-
-void sendHeartbeat() {
-  Firebase.RTDB.setTimestamp(&fbdo, "system/lastHeartbeat");
-  Firebase.RTDB.setInt(&fbdo, "system/freeHeap", ESP.getFreeHeap());
-  Firebase.RTDB.setBool(&fbdo, "system/wifi", WiFi.isConnected());
-  Serial.println("💓 نبضة القلب أُرسلت | ذاكرة: " + String(ESP.getFreeHeap()));
-}
-
-void checkGateCommands() {
-  if (Firebase.RTDB.getBool(&fbdo, "gates/entry/open")) {
-    bool shouldOpen = fbdo.boolData();
-    entryServo.write(shouldOpen ? 90 : 0);
-  }
-  if (Firebase.RTDB.getBool(&fbdo, "gates/exit/open")) {
-    bool shouldOpen = fbdo.boolData();
-    exitServo.write(shouldOpen ? 90 : 0);
-  }
-}`,
-        wifi: `// wifi_manager.h
-// إدارة اتصال WiFi مع إعادة الاتصال التلقائي
-
-#pragma once
-#include <WiFi.h>
-
-class WiFiManager {
-public:
-  static void connect(const char* ssid, const char* password) {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-      delay(1000);
-      Serial.print(".");
-      attempts++;
-    }
-    
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("\\n✅ WiFi: " + WiFi.localIP().toString());
-    } else {
-      Serial.println("\\n❌ WiFi فشل - إعادة تشغيل...");
-      ESP.restart();
-    }
-  }
-
-  static void keepAlive() {
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("⚠️ WiFi انقطع - إعادة الاتصال...");
-      WiFi.reconnect();
-      delay(5000);
-    }
-  }
-  
-  static String getIP() { return WiFi.localIP().toString(); }
-  static int getRSSI() { return WiFi.RSSI(); }
-};`,
-        firebase: `// firebase_helper.h
-// مساعد Firebase الذكي
-
-#pragma once
-#include <Firebase_ESP_Client.h>
-
-class FirebaseHelper {
-private:
-  FirebaseData fbdo;
-  FirebaseAuth auth;
-  FirebaseConfig config;
-  bool ready = false;
-  
-public:
-  void init(const char* apiKey, const char* dbUrl) {
-    config.api_key = apiKey;
-    config.database_url = dbUrl;
-    Firebase.begin(&config, &auth);
-    Firebase.reconnectWiFi(true);
-    ready = true;
-    Serial.println("✅ Firebase متصل");
-  }
-  
-  bool setSlot(int slotId, bool occupied) {
-    if (!ready) return false;
-    String path = "slots/slot" + String(slotId) + "/occupied";
-    return Firebase.RTDB.setBool(&fbdo, path.c_str(), occupied);
-  }
-  
-  bool getGateCommand(const char* gate) {
-    String path = "gates/" + String(gate) + "/open";
-    if (Firebase.RTDB.getBool(&fbdo, path.c_str()))
-      return fbdo.boolData();
-    return false;
-  }
-  
-  void heartbeat() {
-    Firebase.RTDB.setTimestamp(&fbdo, "system/lastHeartbeat");
-    Firebase.RTDB.setInt(&fbdo, "system/freeHeap", ESP.getFreeHeap());
-    Firebase.RTDB.setBool(&fbdo, "system/wifi", WiFi.isConnected());
-  }
-  
-  bool validateOTP(const char* otp) {
-    String path = "liveAccess/" + String(otp) + "/active";
-    if (Firebase.RTDB.getBool(&fbdo, path.c_str()))
-      return fbdo.boolData();
-    return false;
-  }
-};`,
-        parking: `// parking_logic.h
-// منطق نظام موقف السيارات
-
-#pragma once
-
-class ParkingLogic {
-public:
-  static const int MAX_SLOTS = 4;
-  bool occupied[MAX_SLOTS] = {};
-  int totalIn = 0, totalOut = 0;
-  
-  void update(int slotIndex, bool isOccupied) {
-    if (slotIndex < 0 || slotIndex >= MAX_SLOTS) return;
-    if (isOccupied != occupied[slotIndex]) {
-      isOccupied ? totalIn++ : totalOut++;
-    }
-    occupied[slotIndex] = isOccupied;
-  }
-  
-  int getAvailable() {
-    int count = 0;
-    for (int i = 0; i < MAX_SLOTS; i++)
-      if (!occupied[i]) count++;
-    return count;
-  }
-  
-  float getOccupancyRate() {
-    int occ = 0;
-    for (int i = 0; i < MAX_SLOTS; i++)
-      if (occupied[i]) occ++;
-    return (float)occ / MAX_SLOTS * 100.0f;
-  }
-  
-  bool isFull() { return getAvailable() == 0; }
-  
-  void printStatus() {
-    Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━");
-    Serial.println("📊 حالة الموقف:");
-    for (int i = 0; i < MAX_SLOTS; i++)
-      Serial.println("  [" + String(i+1) + "] " + (occupied[i] ? "🔴 مشغول" : "🟢 متاح"));
-    Serial.println("متاح: " + String(getAvailable()) + "/" + MAX_SLOTS);
-    Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━");
-  }
-};`,
-        sensors: `// sensors.h
-// قراءة حساسات الموقف
-
-#pragma once
-
-struct SensorReading {
-  bool detected;
-  float distance; // cm
-  unsigned long timestamp;
-};
-
-class UltrasonicSensor {
-private:
-  int trigPin, echoPin;
-  float threshold; // cm
-  
-public:
-  UltrasonicSensor(int trig, int echo, float thresh = 20.0) 
-    : trigPin(trig), echoPin(echo), threshold(thresh) {
-    pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);
-  }
-  
-  SensorReading read() {
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    
-    long duration = pulseIn(echoPin, HIGH, 30000);
-    float distance = duration * 0.034 / 2;
-    
-    return {
-      .detected = (distance > 0 && distance < threshold),
-      .distance = distance,
-      .timestamp = millis()
-    };
-  }
-};
-
-class IRSensor {
-private:
-  int pin;
-public:
-  IRSensor(int p) : pin(p) { pinMode(pin, INPUT); }
-  bool isDetected() { return !digitalRead(pin); }
-};`,
-      };
-
-      // ==============================
-      // IDE FUNCTIONS
-      // ==============================
-      function initIDE() {
-        const editor = document.getElementById("codeEditor");
-        editor.value = files.main;
-        updateLineNumbers();
-        editor.addEventListener("scroll", syncLineNumbers);
-        editor.addEventListener("input", updateLineNumbers);
-        editor.addEventListener("keydown", handleEditorKey);
-      }
-
-      function updateLineNumbers() {
-        const editor = document.getElementById("codeEditor");
-        const lines = editor.value.split("\n").length;
-        const ln = document.getElementById("lineNumbers");
-        ln.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join(
-          "<br>",
-        );
-      }
-
-      function syncLineNumbers() {
-        const editor = document.getElementById("codeEditor");
-        const ln = document.getElementById("lineNumbers");
-        ln.scrollTop = editor.scrollTop;
-      }
-
-      function handleEditorKey(e) {
-        if (e.key === "Tab") {
-          e.preventDefault();
-          const start = this.selectionStart;
-          const end = this.selectionEnd;
-          this.value =
-            this.value.substring(0, start) + "  " + this.value.substring(end);
-          this.selectionStart = this.selectionEnd = start + 2;
-          updateLineNumbers();
-        }
-      }
-
-      function selectFile(el, fileKey) {
-        document
-          .querySelectorAll(".file-item")
-          .forEach((f) => f.classList.remove("active"));
-        el.classList.add("active");
-        document.getElementById("codeEditor").value = files[fileKey] || "";
-        document.getElementById("activeTabLabel").textContent =
-          el.textContent.trim();
-        updateLineNumbers();
-      }
-
-      async function verifyCode() {
-        const btn = document.querySelector(".ide-btn.primary");
-        const status = document.getElementById("ideStatus");
-        status.textContent = "جاري التحقق...";
-        status.style.color = "var(--accent4)";
-
-        // Simulate verification
-        await sleep(1500);
-        const hasErrors = Math.random() < 0.1;
-
-        if (hasErrors) {
-          addSerialLine("❌ خطأ في السطر 42: semicolon مفقود", "error");
-          status.textContent = "خطأ في التحقق";
-          status.style.color = "var(--danger)";
-          notify("❌ فشل التحقق - راجع الكود", "error");
-        } else {
-          addSerialLine("✅ التحقق نجح - الكود صحيح", "info");
-          addSerialLine(
-            `📦 الحجم: ${Math.floor(Math.random() * 30 + 180)} KB / 4096 KB (ذاكرة البرنامج)`,
-            "info",
-          );
-          addSerialLine(
-            `📦 الـ RAM: ${Math.floor(Math.random() * 20 + 40)} KB / 520 KB`,
-            "info",
-          );
-          status.textContent = "التحقق نجح ✅";
-          status.style.color = "var(--accent3)";
-          notify("✅ التحقق نجح", "success");
-        }
-      }
-
-      async function uploadCode() {
-        if (!isConnected) {
-          notify("⚠️ وصّل الجهاز أولاً", "error");
-          await connectSerial();
-          return;
-        }
-        const status = document.getElementById("ideStatus");
-        status.textContent = "جاري الرفع...";
-
-        addSerialLine("⬆️ جاري رفع الكود...", "info");
-
-        const steps = [
-          "ضغط... 0%",
-          "رفع... 15%",
-          "رفع... 33%",
-          "رفع... 51%",
-          "رفع... 68%",
-          "رفع... 84%",
-          "رفع... 97%",
-          "رفع... 100% ✅",
-        ];
-
-        for (const step of steps) {
-          await sleep(300);
-          addSerialLine(step, "info");
-        }
-
-        await sleep(500);
-        addSerialLine("🎉 تم الرفع بنجاح! اللوحة تعيد التشغيل...", "info");
-        await sleep(1000);
-        addSerialLine("🚗 Smart Parking ESP32 Starting...", "info");
-        await sleep(500);
-        addSerialLine("جاري الاتصال بـ WiFi....", "info");
-        await sleep(800);
-        addSerialLine("✅ WiFi: 192.168.1.105", "info");
-        addSerialLine("✅ Firebase متصل", "info");
-        addSerialLine("✅ النظام جاهز", "info");
-
-        status.textContent = "تم الرفع ✅";
-        notify("✅ تم رفع الكود بنجاح", "success");
-      }
-
-      function newFile() {
-        document.getElementById("codeEditor").value = `// ملف جديد
-void setup() {
-  Serial.begin(115200);
-}
-
-void loop() {
-  // كودك هنا
-}`;
-        updateLineNumbers();
-        notify("📄 ملف جديد", "info");
-      }
-
-      function openFile() {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".ino,.cpp,.h,.c";
-        input.onchange = async (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          const text = await file.text();
-          document.getElementById("codeEditor").value = text;
-          document.getElementById("activeTabLabel").textContent = file.name;
-          updateLineNumbers();
-          notify(`📂 تم فتح ${file.name}`, "success");
-        };
-        input.click();
-      }
-
-      function saveFile() {
-        const code = document.getElementById("codeEditor").value;
-        const name = document.getElementById("activeTabLabel").textContent;
-        const blob = new Blob([code], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = name;
-        a.click();
-        URL.revokeObjectURL(url);
-        notify(`💾 تم حفظ ${name}`, "success");
-      }
-
-      function formatCode() {
-        notify("✨ تنسيق الكود...", "info");
-      }
-
-      function clearSerial() {
-        document.getElementById("serialOutput").innerHTML =
-          '<div class="serial-line info">// تم مسح المنفذ</div>';
-      }
-
-      function addSerialLine(text, type = "") {
-        const out = document.getElementById("serialOutput");
-        const div = document.createElement("div");
-        div.className = "serial-line" + (type ? " " + type : "");
-        div.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-        out.appendChild(div);
-        if (autoScroll) out.scrollTop = out.scrollHeight;
-      }
-
-      function toggleAutoScroll() {
-        autoScroll = !autoScroll;
-        document.getElementById("autoScrollBtn").textContent = autoScroll
-          ? "⬇ Auto"
-          : "⬇ Manual";
-      }
-
-      function handleSerialKey(e) {
-        if (e.key === "Enter") sendSerial();
-      }
-
-      function sendSerial() {
-        const input = document.getElementById("serialInput");
-        const val = input.value.trim();
-        if (!val) return;
-        addSerialLine("> " + val, "warn");
-        input.value = "";
-        // Echo response simulation
-        setTimeout(() => {
-          if (val === "status") addSerialLine("نظام سليم - 4 مواقف", "info");
-          else if (val === "reset") addSerialLine("🔄 إعادة تشغيل...", "info");
-          else addSerialLine("أمر غير معروف: " + val, "error");
-        }, 200);
-      }
-
-      async function connectSerial() {
-        if (!("serial" in navigator)) {
-          // Simulate connection
-          isConnected = true;
-          document.getElementById("connectionStatus").textContent =
-            "🟢 متصل (محاكاة)";
-          document.getElementById("connectionStatus").className = "badge green";
-          document.getElementById("serialIndicator").className =
-            "serial-indicator connected";
-          addSerialLine("🔗 متصل (وضع المحاكاة)", "info");
-          simulateSerialData();
-          notify("🔗 متصل بنجاح (محاكاة)", "success");
-          return;
-        }
-        try {
-          serialPort = await navigator.serial.requestPort();
-          await serialPort.open({
-            baudRate: parseInt(document.getElementById("baudRate").value),
-          });
-          isConnected = true;
-          document.getElementById("connectionStatus").textContent = "🟢 متصل";
-          document.getElementById("connectionStatus").className = "badge green";
-          document.getElementById("serialIndicator").className =
-            "serial-indicator connected";
-          notify("🔗 متصل بالجهاز", "success");
-          readSerial();
-        } catch (e) {
-          if (e.name !== "NotFoundError") notify("❌ " + e.message, "error");
-        }
-      }
-
-      function simulateSerialData() {
-        const msgs = [
-          ["💓 نبضة القلب | ذاكرة: 243120 bytes", "info"],
-          ["📊 موقف 1: متاح | موقف 2: مشغول", ""],
-          ["✅ Firebase متصل", "info"],
-          ["📡 WiFi RSSI: -62 dBm", ""],
-          ["🚗 سيارة جديدة في موقف 3", "warn"],
-        ];
-        let i = 0;
-        setInterval(() => {
-          if (isConnected) {
-            addSerialLine(msgs[i % msgs.length][0], msgs[i % msgs.length][1]);
-            i++;
-          }
-        }, 3000);
-      }
-
-      async function readSerial() {
-        serialReader = serialPort.readable.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        try {
-          while (true) {
-            const { value, done } = await serialReader.read();
-            if (done) break;
-            buffer += decoder.decode(value);
-            const lines = buffer.split("\n");
-            buffer = lines.pop();
-            lines.forEach((l) => addSerialLine(l.trim()));
-          }
-        } catch (e) {}
-      }
-
-      async function scanPorts() {
-        const sel = document.getElementById("idePort");
-        sel.innerHTML = '<option value="">-- جاري البحث... --</option>';
-        await sleep(800);
-        sel.innerHTML = `
-    <option value="">-- اختر منفذ --</option>
-    <option value="COM3">COM3 (ESP32)</option>
-    <option value="COM7">COM7 (Arduino)</option>
-  `;
-        notify("🔍 تم العثور على منفذين", "info");
-      }
-
-      function sleep(ms) {
-        return new Promise((r) => setTimeout(r, ms));
-      }
-
-      // ==============================
-      // SIMULATOR
-      // ==============================
-      const componentDefs = [
+      // --------------------- تعريف جميع القطع (30+ نموذجية) ---------------------
+      const COMPONENTS = [
         {
-          category: "MICROCONTROLLERS",
-          icon: "🟢",
-          name: "ESP32",
-          desc: "WiFi+BT",
           id: "esp32",
-          color: "#1a5c38",
+          cat: "MCU",
+          name: "ESP32",
+          icon: "🟢",
+          desc: "WiFi+BT",
+          width: 120,
+          height: 90,
+          pins: [
+            "GND",
+            "3V3",
+            "GPIO18",
+            "GPIO19",
+            "GPIO21",
+            "GPIO22",
+            "GPIO23",
+            "GPIO25",
+          ],
+          model: "mcu",
+          voltage: 3.3,
         },
         {
-          category: "MICROCONTROLLERS",
-          icon: "🔵",
-          name: "Arduino Uno",
-          desc: "ATmega328",
           id: "uno",
-          color: "#1a3a5c",
+          cat: "MCU",
+          name: "Arduino Uno",
+          icon: "🔵",
+          desc: "ATmega328",
+          width: 110,
+          height: 85,
+          pins: ["5V", "GND", "D9", "D10", "A0", "A1"],
+          model: "mcu",
+          voltage: 5,
         },
         {
-          category: "SENSORS",
-          icon: "📡",
-          name: "HC-SR04",
-          desc: "Ultrasonic",
-          id: "hcsr04",
-          color: "#1a3a5c",
-        },
-        {
-          category: "SENSORS",
-          icon: "👁️",
-          name: "PIR",
-          desc: "Motion",
-          id: "pir",
-          color: "#3a1a5c",
-        },
-        {
-          category: "SENSORS",
-          icon: "🌡️",
-          name: "DHT22",
-          desc: "Temp/Humidity",
-          id: "dht22",
-          color: "#5c3a1a",
-        },
-        {
-          category: "SENSORS",
-          icon: "💡",
-          name: "LDR",
-          desc: "Light",
-          id: "ldr",
-          color: "#5c5c1a",
-        },
-        {
-          category: "OUTPUT",
-          icon: "🔴",
-          name: "LED",
-          desc: "5mm",
-          id: "led",
-          color: "#5c1a1a",
-        },
-        {
-          category: "OUTPUT",
-          icon: "⚙️",
-          name: "Servo SG90",
-          desc: "180°",
-          id: "servo",
-          color: "#1a1a5c",
-        },
-        {
-          category: "OUTPUT",
-          icon: "🖥️",
-          name: "LCD 16x2",
-          desc: "I2C",
-          id: "lcd",
-          color: "#1a5c5c",
-        },
-        {
-          category: "OUTPUT",
-          icon: "🔔",
-          name: "Buzzer",
-          desc: "Active",
-          id: "buzzer",
-          color: "#5c1a5c",
-        },
-        {
-          category: "PASSIVE",
-          icon: "〰️",
-          name: "Resistor",
-          desc: "R",
-          id: "resistor",
-          color: "#3a3a1a",
-        },
-        {
-          category: "POWER",
-          icon: "🔋",
-          name: "Battery 9V",
-          desc: "DC",
           id: "battery",
-          color: "#2a2a2a",
+          cat: "POWER",
+          name: "بطارية",
+          icon: "🔋",
+          desc: "1.5V-12V",
+          width: 50,
+          height: 60,
+          pins: ["+", "-"],
+          model: "voltage",
+          value: 9,
+        },
+        {
+          id: "resistor",
+          cat: "PASSIVE",
+          name: "مقاومة",
+          icon: "〰️",
+          desc: "1Ω–1MΩ",
+          width: 50,
+          height: 30,
+          pins: ["A", "B"],
+          model: "resistor",
+          value: 10000,
+        },
+        {
+          id: "capacitor",
+          cat: "PASSIVE",
+          name: "مكثف",
+          icon: "⊣⊢",
+          desc: "1pF–1000µF",
+          width: 50,
+          height: 40,
+          pins: ["+", "-"],
+          model: "capacitor",
+          value: 1e-6,
+        },
+        {
+          id: "pot",
+          cat: "PASSIVE",
+          name: "بوتميتر",
+          icon: "🎚️",
+          desc: "10kΩ",
+          width: 50,
+          height: 50,
+          pins: ["1", "2", "3"],
+          model: "pot",
+          value: 10000,
+        },
+        {
+          id: "led",
+          cat: "OUTPUT",
+          name: "LED",
+          icon: "🔴",
+          desc: "Red 5mm",
+          width: 40,
+          height: 40,
+          pins: ["+", "-"],
+          model: "led",
+          state: false,
+          vf: 2.0,
+        },
+        {
+          id: "servo",
+          cat: "OUTPUT",
+          name: "Servo SG90",
+          icon: "⚙️",
+          desc: "0-180°",
+          width: 70,
+          height: 50,
+          pins: ["PWM", "VCC", "GND"],
+          model: "servo",
+          angle: 0,
+        },
+        {
+          id: "stepper",
+          cat: "OUTPUT",
+          name: "Stepper 28BYJ-48",
+          icon: "🔄",
+          desc: "Unipolar",
+          width: 80,
+          height: 70,
+          pins: ["IN1", "IN2", "IN3", "IN4", "VCC", "GND"],
+          model: "stepper",
+          steps: 0,
+        },
+        {
+          id: "lcd_i2c",
+          cat: "DISPLAY",
+          name: "LCD 16x2 I2C",
+          icon: "🖥️",
+          desc: "I2C",
+          width: 100,
+          height: 70,
+          pins: ["SDA", "SCL", "VCC", "GND"],
+          model: "lcd",
+          text: "Hello",
+        },
+        {
+          id: "ultrasonic",
+          cat: "SENSOR",
+          name: "HC-SR04",
+          icon: "📡",
+          desc: "Ultrasonic",
+          width: 90,
+          height: 60,
+          pins: ["VCC", "TRIG", "ECHO", "GND"],
+          model: "ultrasonic",
+          distance: 50,
+        },
+        {
+          id: "ir_sensor",
+          cat: "SENSOR",
+          name: "IR Sensor",
+          icon: "📡",
+          desc: "Digital obstacle",
+          width: 70,
+          height: 50,
+          pins: ["VCC", "GND", "OUT"],
+          model: "ir",
+          obstacle: false,
+        },
+        {
+          id: "pir",
+          cat: "SENSOR",
+          name: "PIR Motion",
+          icon: "👁️",
+          desc: "Motion",
+          width: 70,
+          height: 50,
+          pins: ["VCC", "OUT", "GND"],
+          model: "pir",
+          motion: false,
+        },
+        {
+          id: "dht22",
+          cat: "SENSOR",
+          name: "DHT22",
+          icon: "🌡️",
+          desc: "Temp/Hum",
+          width: 60,
+          height: 60,
+          pins: ["VCC", "DATA", "GND"],
+          model: "dht",
+          temp: 25,
+          hum: 60,
+        },
+        {
+          id: "ldr",
+          cat: "SENSOR",
+          name: "LDR",
+          icon: "💡",
+          desc: "Light",
+          width: 40,
+          height: 40,
+          pins: ["A", "B"],
+          model: "ldr",
+          resistance: 5000,
+        },
+        {
+          id: "buzzer",
+          cat: "OUTPUT",
+          name: "Buzzer",
+          icon: "🔔",
+          desc: "Active",
+          width: 40,
+          height: 40,
+          pins: ["+", "-"],
+          model: "buzzer",
+          state: false,
+        },
+        {
+          id: "relay",
+          cat: "OUTPUT",
+          name: "Relay 5V",
+          icon: "⏚",
+          desc: "SPDT",
+          width: 60,
+          height: 60,
+          pins: ["IN", "COM", "NO", "NC", "VCC", "GND"],
+          model: "relay",
+          active: false,
+        },
+        {
+          id: "button",
+          cat: "INPUT",
+          name: "Push Button",
+          icon: "🔘",
+          desc: "Momentary",
+          width: 40,
+          height: 40,
+          pins: ["1", "2"],
+          model: "button",
+          pressed: false,
+        },
+        {
+          id: "transistor_npn",
+          cat: "ACTIVE",
+          name: "NPN (BC547)",
+          icon: "🔻",
+          desc: "Switching",
+          width: 50,
+          height: 60,
+          pins: ["C", "B", "E"],
+          model: "npn",
+          state: false,
+        },
+        {
+          id: "mosfet",
+          cat: "ACTIVE",
+          name: "MOSFET IRF540",
+          icon: "🔺",
+          desc: "N-Channel",
+          width: 60,
+          height: 60,
+          pins: ["D", "G", "S"],
+          model: "mosfet",
+          state: false,
+        },
+        {
+          id: "motor_dc",
+          cat: "OUTPUT",
+          name: "DC Motor",
+          icon: "⚡",
+          desc: "Brushed",
+          width: 60,
+          height: 50,
+          pins: ["M1", "M2"],
+          model: "motor",
+          speed: 0,
         },
       ];
 
-      function initSimulator() {
-        const list = document.getElementById("componentsList");
-        let lastCat = "";
-        componentDefs.forEach((c) => {
-          if (c.category !== lastCat) {
-            list.innerHTML += `<div class="comp-category">${c.category}</div>`;
-            lastCat = c.category;
-          }
-          const div = document.createElement("div");
-          div.className = "comp-item";
-          div.draggable = true;
-          div.innerHTML = `
-      <div class="comp-icon" style="background:${c.color}22;border:1px solid ${c.color}44">${c.icon}</div>
-      <div class="comp-info">
-        <div class="comp-name">${c.name}</div>
-        <div class="comp-desc">${c.desc}</div>
-      </div>`;
-          div.addEventListener("dragstart", (e) =>
-            e.dataTransfer.setData("compId", c.id),
-          );
-          div.addEventListener("click", () =>
-            addSimComponent(c.id, null, null),
-          );
-          list.appendChild(div);
-        });
+      // حالة الدائرة
+      let circuitComponents = []; // لا توجد قطع افتراضية
+      let wires = [];
+      let selectedCompId = null;
+      let simulationInterval = null;
+      let isSimulating = false;
+      let canvas, ctx, canvasWidth, canvasHeight;
+      let dragData = { dragging: false, compId: null, offsetX: 0, offsetY: 0 };
+      let wireMode = {
+        active: false,
+        fromComp: null,
+        fromPin: null,
+        fromX: 0,
+        fromY: 0,
+      };
 
-        const canvas = document.getElementById("simCanvas");
-        const area = document.getElementById("simCanvasArea");
-        canvas.width = area.clientWidth;
-        canvas.height = area.clientHeight;
-
-        area.addEventListener("dragover", (e) => e.preventDefault());
-        area.addEventListener("drop", (e) => {
-          e.preventDefault();
-          const id = e.dataTransfer.getData("compId");
-          const rect = area.getBoundingClientRect();
-          addSimComponent(id, e.clientX - rect.left, e.clientY - rect.top);
-        });
-
-        // Demo components
-        addSimComponent("esp32", 200, 150);
-        addSimComponent("hcsr04", 450, 120);
-        addSimComponent("led", 450, 280);
-        addSimComponent("servo", 200, 320);
-
-        drawSim();
+      function generateId() {
+        return Date.now() + "-" + Math.random().toString(36).substr(2, 8);
       }
 
-      function addSimComponent(id, x, y) {
-        const def = componentDefs.find((c) => c.id === id);
-        if (!def) return;
-        const canvas = document.getElementById("simCanvas");
-        const cx = x || Math.random() * (canvas.width - 150) + 50;
-        const cy = y || Math.random() * (canvas.height - 100) + 50;
-
-        const comp = {
-          id: Date.now(),
-          type: id,
-          def,
-          x: cx,
-          y: cy,
-          w: 120,
-          h: 70,
-          selected: false,
-          state: { powered: false, value: 0 },
-          pins: getPins(id),
+      // إضافة قطعة جديدة
+      function addComponent(compDef, x, y) {
+        const newComp = {
+          id: generateId(),
+          compDef: compDef,
+          x: x || 150,
+          y: y || 150,
+          width: compDef.width,
+          height: compDef.height,
+          pins: compDef.pins.map((p) => ({ name: p, connected: false })),
+          values: { ...compDef },
         };
-        simComponents.push(comp);
-        drawSim();
-        notify(`➕ ${def.name} أُضيف`, "success");
+        if (compDef.model === "led") newComp.values.state = false;
+        if (compDef.model === "servo") newComp.values.angle = 0;
+        if (compDef.model === "stepper") newComp.values.position = 0;
+        if (compDef.model === "lcd") newComp.values.text = "Hello";
+        if (compDef.model === "ultrasonic") newComp.values.distance = 50;
+        if (compDef.model === "ir") newComp.values.obstacle = false;
+        if (compDef.model === "pir") newComp.values.motion = false;
+        if (compDef.model === "dht") {
+          newComp.values.temp = 25;
+          newComp.values.hum = 60;
+        }
+        if (compDef.model === "ldr") newComp.values.resistance = 5000;
+        if (compDef.model === "buzzer") newComp.values.state = false;
+        if (compDef.model === "relay") newComp.values.active = false;
+        if (compDef.model === "button") newComp.values.pressed = false;
+        if (compDef.model === "npn") newComp.values.state = false;
+        if (compDef.model === "mosfet") newComp.values.state = false;
+        if (compDef.model === "motor") newComp.values.speed = 0;
+        circuitComponents.push(newComp);
+        drawCanvas();
+        updatePropsPanel(null);
       }
 
-      function getPins(type) {
-        const pins = {
-          esp32: [
-            { name: "3V3", x: 0, y: 0.2 },
-            { name: "GND", x: 0, y: 0.5 },
-            { name: "GPIO25", x: 1, y: 0.2 },
-            { name: "GPIO26", x: 1, y: 0.4 },
-          ],
-          hcsr04: [
-            { name: "VCC", x: 0.1, y: 0 },
-            { name: "GND", x: 0.3, y: 0 },
-            { name: "TRIG", x: 0.6, y: 0 },
-            { name: "ECHO", x: 0.9, y: 0 },
-          ],
-          led: [
-            { name: "+", x: 0.3, y: 0 },
-            { name: "-", x: 0.7, y: 0 },
-          ],
-          servo: [
-            { name: "PWM", x: 0.5, y: 0 },
-            { name: "VCC", x: 0.2, y: 0 },
-            { name: "GND", x: 0.8, y: 0 },
-          ],
-        };
-        return (pins[type] || []).map((p) => ({ ...p, connected: false }));
-      }
-
-      let simCtx = null;
-      let dragging = null,
-        dragOffX = 0,
-        dragOffY = 0;
-      let wires = [],
-        drawingWire = null;
-
-      function drawSim() {
-        const canvas = document.getElementById("simCanvas");
-        if (!simCtx) simCtx = canvas.getContext("2d");
-        const ctx = simCtx;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw wires
+      // رسم الكانفاس
+      function drawCanvas() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        // الأسلاك
+        ctx.beginPath();
         ctx.strokeStyle = "#22c55e";
         ctx.lineWidth = 2;
         wires.forEach((w) => {
-          ctx.beginPath();
-          ctx.moveTo(w.x1, w.y1);
-          ctx.bezierCurveTo(
-            w.x1 + (w.x2 - w.x1) / 2,
-            w.y1,
-            w.x1 + (w.x2 - w.x1) / 2,
-            w.y2,
-            w.x2,
-            w.y2,
-          );
-          ctx.stroke();
+          const fromComp = circuitComponents.find((c) => c.id === w.fromCompId);
+          const toComp = circuitComponents.find((c) => c.id === w.toCompId);
+          if (fromComp && toComp) {
+            const p1 = getPinPos(fromComp, w.fromPin);
+            const p2 = getPinPos(toComp, w.toPin);
+            if (p1 && p2) {
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.stroke();
+            }
+          }
         });
-
-        // Draw components
-        simComponents.forEach((comp) => {
-          const { x, y, w, h, selected, def, state } = comp;
-
-          // Shadow
-          ctx.shadowColor = selected
-            ? "rgba(0,212,255,0.5)"
-            : "rgba(0,0,0,0.5)";
-          ctx.shadowBlur = selected ? 15 : 8;
-
-          // Body
-          ctx.fillStyle = "#111827";
-          ctx.strokeStyle = selected ? "#00d4ff" : "#243447";
-          ctx.lineWidth = selected ? 2 : 1;
-          ctx.beginPath();
-          ctx.roundRect(x, y, w, h, 8);
-          ctx.fill();
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-
-          // Icon
+        // القطع
+        circuitComponents.forEach((comp) => {
+          const { x, y, width, height, compDef, values, id } = comp;
+          const isSelected = selectedCompId === id;
+          ctx.fillStyle = isSelected ? "#1e3a5f" : "#0f172a";
+          ctx.strokeStyle = isSelected ? "#00e0ff" : "#2d3a5e";
+          ctx.lineWidth = isSelected ? 2.5 : 1.5;
+          ctx.fillRect(x, y, width, height);
+          ctx.strokeRect(x, y, width, height);
           ctx.font = "22px serif";
-          ctx.textAlign = "center";
-          ctx.fillText(def.icon, x + w / 2, y + h / 2 - 2);
-
-          // Label
-          ctx.font = "bold 10px JetBrains Mono, monospace";
           ctx.fillStyle = "#e2e8f0";
-          ctx.fillText(def.name, x + w / 2, y + h - 8);
-
-          // State indicator
-          if (isSimRunning && state.powered) {
-            ctx.fillStyle = "#22c55e";
+          ctx.fillText(compDef.icon, x + 8, y + 32);
+          ctx.font = "bold 10px Inter";
+          ctx.fillStyle = "#a0b0d0";
+          ctx.fillText(compDef.name, x + 45, y + 20);
+          comp.pins.forEach((pin, idx) => {
+            const pos = getPinPos(comp, pin.name);
+            if (pos) {
+              ctx.fillStyle = "#f59e0b";
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, 5, 0, 2 * Math.PI);
+              ctx.fill();
+              ctx.fillStyle = "#ccc";
+              ctx.font = "8px monospace";
+              ctx.fillText(pin.name, pos.x - 12, pos.y - 2);
+            }
+          });
+          if (compDef.model === "led" && values.state) {
+            ctx.fillStyle = "#ff6666";
             ctx.beginPath();
-            ctx.arc(x + w - 10, y + 10, 4, 0, Math.PI * 2);
+            ctx.arc(x + width - 12, y + 12, 6, 0, 2 * Math.PI);
             ctx.fill();
           }
-
-          // Pins
-          comp.pins.forEach((pin) => {
-            const px = x + pin.x * w;
-            const py = y + pin.y * h;
-            ctx.fillStyle = "#f59e0b";
-            ctx.beginPath();
-            ctx.arc(px, py, 4, 0, Math.PI * 2);
-            ctx.fill();
-          });
+          if (compDef.model === "servo") {
+            ctx.fillStyle = "#4ade80";
+            ctx.font = "bold 10px monospace";
+            ctx.fillText(values.angle + "°", x + width - 25, y + 15);
+          }
+          if (compDef.model === "lcd") {
+            ctx.fillStyle = "#fff";
+            ctx.font = "8px monospace";
+            ctx.fillText(values.text.slice(0, 14), x + 8, y + height - 8);
+          }
+          if (compDef.model === "ultrasonic") {
+            ctx.fillStyle = "#facc15";
+            ctx.font = "8px monospace";
+            ctx.fillText(values.distance + "cm", x + 8, y + height - 4);
+          }
         });
-
-        // Drawing wire
-        if (drawingWire) {
-          ctx.strokeStyle = "#00d4ff88";
-          ctx.lineWidth = 2;
-          ctx.setLineDash([5, 5]);
+        // سلك مؤقت
+        if (wireMode.active && wireMode.fromComp) {
           ctx.beginPath();
-          ctx.moveTo(drawingWire.x1, drawingWire.y1);
-          ctx.lineTo(drawingWire.x2, drawingWire.y2);
+          ctx.setLineDash([5, 5]);
+          ctx.strokeStyle = "#00e0ff";
+          ctx.lineWidth = 2;
+          ctx.moveTo(wireMode.fromX, wireMode.fromY);
+          ctx.lineTo(wireMode.toX, wireMode.toY);
           ctx.stroke();
           ctx.setLineDash([]);
         }
       }
 
-      // Mouse interaction
-      document
-        .getElementById("simCanvas")
-        .addEventListener("mousedown", (e) => {
-          const rect = e.target.getBoundingClientRect();
-          const mx = e.clientX - rect.left;
-          const my = e.clientY - rect.top;
-
-          simComponents.forEach((c) => (c.selected = false));
-          const hit = simComponents
-            .slice()
-            .reverse()
-            .find(
-              (c) =>
-                mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h,
-            );
-
-          if (hit) {
-            hit.selected = true;
-            selectedComp = hit;
-            dragging = hit;
-            dragOffX = mx - hit.x;
-            dragOffY = my - hit.y;
-            showSimProps(hit);
-            drawSim();
-          }
-        });
-
-      document
-        .getElementById("simCanvas")
-        .addEventListener("mousemove", (e) => {
-          if (!dragging) return;
-          const rect = e.target.getBoundingClientRect();
-          dragging.x = e.clientX - rect.left - dragOffX;
-          dragging.y = e.clientY - rect.top - dragOffY;
-          drawSim();
-        });
-
-      document.getElementById("simCanvas").addEventListener("mouseup", () => {
-        dragging = null;
-      });
-
-      function showSimProps(comp) {
-        const p = document.getElementById("propsContent");
-        p.innerHTML = `
-    <div class="prop-group">
-      <div class="prop-group-title">📌 معلومات القطعة</div>
-      <div class="prop-row"><span class="prop-label">النوع</span><span>${comp.def.name}</span></div>
-      <div class="prop-row"><span class="prop-label">المعرّف</span><input class="prop-input" value="${comp.type}" readonly></div>
-    </div>
-    <div class="prop-group">
-      <div class="prop-group-title">📍 الموضع</div>
-      <div class="prop-row">
-        <span class="prop-label">X</span>
-        <input class="prop-input" value="${Math.round(comp.x)}" onchange="comp_move('x',${comp.id},this.value)">
-      </div>
-      <div class="prop-row">
-        <span class="prop-label">Y</span>
-        <input class="prop-input" value="${Math.round(comp.y)}" onchange="comp_move('y',${comp.id},this.value)">
-      </div>
-    </div>
-    ${getCompSpecificProps(comp)}
-    <button class="btn" style="width:100%;justify-content:center;margin-top:8px;background:rgba(239,68,68,0.1);border-color:var(--danger);color:var(--danger)" onclick="deleteComp(${comp.id})">
-      🗑 حذف القطعة
-    </button>`;
+      function getPinPos(comp, pinName) {
+        const idx = comp.pins.findIndex((p) => p.name === pinName);
+        if (idx === -1) return null;
+        const pinX = comp.x + (idx + 1) * (comp.width / (comp.pins.length + 1));
+        const pinY = comp.y + comp.height - 6;
+        return { x: pinX, y: pinY };
       }
 
-      function getCompSpecificProps(comp) {
-        if (comp.type === "led")
-          return `
-    <div class="prop-group">
-      <div class="prop-group-title">⚙️ إعدادات</div>
-      <div class="prop-row"><span class="prop-label">اللون</span>
-        <select class="prop-select" onchange="setLEDColor(${comp.id},this.value)">
-          <option value="red" selected>أحمر</option>
-          <option value="green">أخضر</option>
-          <option value="blue">أزرق</option>
-          <option value="yellow">أصفر</option>
-        </select>
-      </div>
-    </div>`;
-        if (comp.type === "esp32")
-          return `
-    <div class="prop-group">
-      <div class="prop-group-title">📡 WiFi</div>
-      <div class="prop-row"><span class="prop-label">SSID</span><input class="prop-input" placeholder="اسم الشبكة"></div>
-      <div class="prop-row"><span class="prop-label">Password</span><input class="prop-input" type="password" placeholder="كلمة المرور"></div>
-    </div>`;
-        return "";
-      }
-
-      function deleteComp(id) {
-        simComponents = simComponents.filter((c) => c.id !== id);
-        drawSim();
-        document.getElementById("propsContent").innerHTML =
-          '<div style="color:var(--muted);text-align:center;padding:20px">اختر قطعة</div>';
-      }
-
-      function filterComponents(query) {
-        const items = document.querySelectorAll("#componentsList .comp-item");
-        items.forEach((item) => {
-          const name = item
-            .querySelector(".comp-name")
-            .textContent.toLowerCase();
-          item.style.display = name.includes(query.toLowerCase()) ? "" : "none";
-        });
-      }
-
-      async function runSimulation() {
-        isSimRunning = true;
-        document.getElementById("runBtn").style.display = "none";
-        document.getElementById("stopBtn").style.display = "";
-        document.getElementById("simStatus").textContent = "▶ يعمل...";
-
-        simComponents.forEach((c) => (c.state.powered = true));
-
-        const output = document.getElementById("simOutput");
-        const msgs = [
-          "🚀 بدء المحاكاة...",
-          "✅ ESP32 يعمل على 240MHz",
-          "📡 WiFi متصل (محاكاة)",
-          "💓 نبضة القلب أُرسلت",
-          "📊 موقف 1: متاح | موقف 2: مشغول",
-          "⚙️ Servo يعمل على GPIO18",
-          "📡 HC-SR04: 15.3 cm",
-        ];
-
-        let mi = 0;
-        simInterval = setInterval(() => {
-          const div = document.createElement("div");
-          div.textContent = `[${new Date().toLocaleTimeString()}] ${msgs[mi % msgs.length]}`;
-          div.style.marginBottom = "2px";
-          output.appendChild(div);
-          output.scrollTop = output.scrollHeight;
-          mi++;
-          drawSim();
-        }, 1000);
-
-        drawSim();
-      }
-
-      function stopSimulation() {
-        isSimRunning = false;
-        clearInterval(simInterval);
-        document.getElementById("runBtn").style.display = "";
-        document.getElementById("stopBtn").style.display = "none";
-        document.getElementById("simStatus").textContent = "متوقف";
-        simComponents.forEach((c) => (c.state.powered = false));
-        drawSim();
-      }
-
-      function clearSimCanvas() {
-        simComponents = [];
-        wires = [];
-        drawSim();
-        notify("🗑 تم مسح الكانفاس", "info");
-      }
-
-      function zoomIn() {
-        simZoom = Math.min(2, simZoom + 0.1);
-        notify(`🔍 تكبير: ${Math.round(simZoom * 100)}%`, "info");
-      }
-      function zoomOut() {
-        simZoom = Math.max(0.5, simZoom - 0.1);
-        notify(`🔍 تصغير: ${Math.round(simZoom * 100)}%`, "info");
-      }
-
-      // ==============================
-      // CIRCUIT BUILDER
-      // ==============================
-      let circuitCtx = null;
-      let circuitComps = [];
-      let cDragging = null,
-        cDragOffX = 0,
-        cDragOffY = 0;
-      let activeTool = "select";
-      let wireStart = null;
-      let circuitWires = [];
-      let showGrid = true;
-      let cSelected = null;
-
-      function initCircuit() {
-        const canvas = document.getElementById("circuitCanvas");
-        const wrap = document.getElementById("circuitCanvasWrap");
-        canvas.width = wrap.clientWidth;
-        canvas.height = wrap.clientHeight;
-        circuitCtx = canvas.getContext("2d");
-        drawCircuit();
-
-        canvas.addEventListener("mousedown", circuitMouseDown);
-        canvas.addEventListener("mousemove", circuitMouseMove);
-        canvas.addEventListener("mouseup", circuitMouseUp);
-        canvas.addEventListener("dblclick", circuitDblClick);
-
-        wrap.addEventListener("dragover", (e) => e.preventDefault());
-        wrap.addEventListener("drop", (e) => {
-          e.preventDefault();
-          const id = e.dataTransfer.getData("compId");
-          const rect = wrap.getBoundingClientRect();
-          placeCompAt(id, e.clientX - rect.left, e.clientY - rect.top);
-        });
-
-        // Init pinout
-        initPinout();
-
-        // Demo
-        placeCompAt("esp32", 300, 200);
-        placeCompAt("hcsr04", 550, 150);
-        placeCompAt("servo", 550, 300);
-        placeCompAt("led", 150, 200);
-      }
-
-      const compData = {
-        esp32: {
-          icon: "🟢",
-          label: "ESP32",
-          w: 160,
-          h: 220,
-          color: "#1a5c38",
-          pins: [
-            { name: "3V3", side: "left", pos: 0.1 },
-            { name: "GND", side: "left", pos: 0.2 },
-            { name: "GPIO25", side: "right", pos: 0.2 },
-            { name: "GPIO26", side: "right", pos: 0.3 },
-            { name: "GPIO18", side: "right", pos: 0.4 },
-            { name: "GPIO19", side: "right", pos: 0.5 },
-          ],
-        },
-        uno: {
-          icon: "🔵",
-          label: "Arduino Uno",
-          w: 160,
-          h: 200,
-          color: "#1a3a5c",
-          pins: [
-            { name: "5V", side: "left", pos: 0.1 },
-            { name: "GND", side: "left", pos: 0.2 },
-            { name: "D9", side: "right", pos: 0.2 },
-            { name: "D10", side: "right", pos: 0.3 },
-            { name: "A0", side: "right", pos: 0.6 },
-          ],
-        },
-        hcsr04: {
-          icon: "📡",
-          label: "HC-SR04",
-          w: 120,
-          h: 80,
-          color: "#243447",
-          pins: [
-            { name: "VCC", side: "top", pos: 0.1 },
-            { name: "TRIG", side: "top", pos: 0.4 },
-            { name: "ECHO", side: "top", pos: 0.7 },
-            { name: "GND", side: "top", pos: 0.9 },
-          ],
-        },
-        pir: {
-          icon: "👁️",
-          label: "PIR",
-          w: 90,
-          h: 90,
-          color: "#3a1a5c",
-          pins: [
-            { name: "VCC", side: "bottom", pos: 0.2 },
-            { name: "OUT", side: "bottom", pos: 0.5 },
-            { name: "GND", side: "bottom", pos: 0.8 },
-          ],
-        },
-        dht22: {
-          icon: "🌡️",
-          label: "DHT22",
-          w: 90,
-          h: 100,
-          color: "#5c3a1a",
-          pins: [
-            { name: "VCC", side: "left", pos: 0.25 },
-            { name: "DATA", side: "left", pos: 0.5 },
-            { name: "GND", side: "left", pos: 0.75 },
-          ],
-        },
-        ldr: {
-          icon: "💡",
-          label: "LDR",
-          w: 70,
-          h: 70,
-          color: "#5c5c1a",
-          pins: [
-            { name: "1", side: "left", pos: 0.5 },
-            { name: "2", side: "right", pos: 0.5 },
-          ],
-        },
-        led: {
-          icon: "🔴",
-          label: "LED",
-          w: 60,
-          h: 80,
-          color: "#5c1a1a",
-          pins: [
-            { name: "+", side: "top", pos: 0.3 },
-            { name: "-", side: "top", pos: 0.7 },
-          ],
-        },
-        servo: {
-          icon: "⚙️",
-          label: "SG90",
-          w: 100,
-          h: 80,
-          color: "#1a1a5c",
-          pins: [
-            { name: "PWM", side: "bottom", pos: 0.2 },
-            { name: "VCC", side: "bottom", pos: 0.5 },
-            { name: "GND", side: "bottom", pos: 0.8 },
-          ],
-        },
-        lcd: {
-          icon: "🖥️",
-          label: "LCD 16x2",
-          w: 160,
-          h: 80,
-          color: "#1a5c5c",
-          pins: [
-            { name: "SDA", side: "left", pos: 0.3 },
-            { name: "SCL", side: "left", pos: 0.7 },
-            { name: "VCC", side: "right", pos: 0.3 },
-            { name: "GND", side: "right", pos: 0.7 },
-          ],
-        },
-        buzzer: {
-          icon: "🔔",
-          label: "Buzzer",
-          w: 70,
-          h: 70,
-          color: "#5c1a5c",
-          pins: [
-            { name: "+", side: "top", pos: 0.3 },
-            { name: "-", side: "top", pos: 0.7 },
-          ],
-        },
-        resistor: {
-          icon: "〰️",
-          label: "Resistor",
-          w: 80,
-          h: 40,
-          color: "#3a3a1a",
-          pins: [
-            { name: "1", side: "left", pos: 0.5 },
-            { name: "2", side: "right", pos: 0.5 },
-          ],
-        },
-        capacitor: {
-          icon: "⊣⊢",
-          label: "Capacitor",
-          w: 60,
-          h: 70,
-          color: "#2a3a2a",
-          pins: [
-            { name: "+", side: "top", pos: 0.3 },
-            { name: "-", side: "top", pos: 0.7 },
-          ],
-        },
-        battery: {
-          icon: "🔋",
-          label: "9V Battery",
-          w: 90,
-          h: 60,
-          color: "#2a2a2a",
-          pins: [
-            { name: "+", side: "left", pos: 0.5 },
-            { name: "-", side: "right", pos: 0.5 },
-          ],
-        },
-        button: {
-          icon: "🔘",
-          label: "Push Button",
-          w: 70,
-          h: 70,
-          color: "#1a2a3a",
-          pins: [
-            { name: "1", side: "top", pos: 0.3 },
-            { name: "2", side: "bottom", pos: 0.7 },
-          ],
-        },
-      };
-
-      function placeComp(id) {
-        placeCompAt(id, null, null);
-      }
-      function placeCompAt(id, x, y) {
-        const def = compData[id];
-        if (!def) return;
-        const canvas = document.getElementById("circuitCanvas");
-        const cx = x || Math.random() * (canvas.width - 200) + 100;
-        const cy = y || Math.random() * (canvas.height - 200) + 100;
-        circuitComps.push({
-          id: Date.now(),
-          type: id,
-          def,
-          x: cx,
-          y: cy,
-          rotation: 0,
-          selected: false,
-        });
-        drawCircuit();
-        notify(`➕ ${def.label} أُضيف`, "success");
-      }
-
-      function dragComp(e, id) {
-        e.dataTransfer.setData("compId", id);
-      }
-
-      function getPinPos(comp, pin) {
-        const { x, y, def } = comp;
-        const { w, h } = def;
-        if (pin.side === "left") return { x: x, y: y + pin.pos * h };
-        if (pin.side === "right") return { x: x + w, y: y + pin.pos * h };
-        if (pin.side === "top") return { x: x + pin.pos * w, y: y };
-        if (pin.side === "bottom") return { x: x + pin.pos * w, y: y + h };
-        return { x, y };
-      }
-
-      function drawCircuit() {
-        const canvas = document.getElementById("circuitCanvas");
-        if (!circuitCtx) return;
-        const ctx = circuitCtx;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Grid
-        if (showGrid) {
-          ctx.strokeStyle = "rgba(255,255,255,0.04)";
-          ctx.lineWidth = 0.5;
-          for (let gx = 0; gx < canvas.width; gx += 20) {
-            ctx.beginPath();
-            ctx.moveTo(gx, 0);
-            ctx.lineTo(gx, canvas.height);
-            ctx.stroke();
-          }
-          for (let gy = 0; gy < canvas.height; gy += 20) {
-            ctx.beginPath();
-            ctx.moveTo(0, gy);
-            ctx.lineTo(canvas.width, gy);
-            ctx.stroke();
-          }
-        }
-
-        // Wires
-        circuitWires.forEach((w) => {
-          ctx.strokeStyle = "#22c55e";
-          ctx.lineWidth = 2;
-          ctx.shadowColor = "#22c55e44";
-          ctx.shadowBlur = 4;
-          ctx.beginPath();
-          ctx.moveTo(w.x1, w.y1);
-          const mx = (w.x1 + w.x2) / 2;
-          ctx.bezierCurveTo(mx, w.y1, mx, w.y2, w.x2, w.y2);
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-        });
-
-        // Components
-        circuitComps.forEach((comp) => {
-          const { x, y, def, selected } = comp;
-          const { w, h, color, icon, label } = def;
-
-          ctx.shadowColor = selected
-            ? "rgba(0,212,255,0.6)"
-            : "rgba(0,0,0,0.6)";
-          ctx.shadowBlur = selected ? 20 : 10;
-
-          // PCB-style body
-          ctx.fillStyle = color + "33";
-          ctx.strokeStyle = selected ? "#00d4ff" : color + "aa";
-          ctx.lineWidth = selected ? 2.5 : 1.5;
-          ctx.beginPath();
-          ctx.roundRect(x, y, w, h, 6);
-          ctx.fill();
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-
-          // Inner lines (PCB effect)
-          ctx.strokeStyle = color + "44";
-          ctx.lineWidth = 0.5;
-          ctx.beginPath();
-          ctx.roundRect(x + 4, y + 4, w - 8, h - 8, 4);
-          ctx.stroke();
-
-          // Icon + Label
-          ctx.font = h > 80 ? "28px serif" : "20px serif";
-          ctx.textAlign = "center";
-          ctx.fillText(icon, x + w / 2, y + h / 2 + (h > 80 ? 0 : 2));
-
-          ctx.font = `bold 10px 'JetBrains Mono', monospace`;
-          ctx.fillStyle = "#94a3b8";
-          ctx.fillText(label, x + w / 2, y + h - 6);
-
-          // Pins
-          def.pins?.forEach((pin) => {
-            const pp = getPinPos(comp, pin);
-            ctx.fillStyle = "#f59e0b";
-            ctx.strokeStyle = "#f59e0b66";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Pin label
-            ctx.font = "8px JetBrains Mono, monospace";
-            ctx.fillStyle = "#64748b";
-            const offset = 10;
-            if (pin.side === "left")
-              ctx.fillText(pin.name, pp.x - offset - 16, pp.y + 3);
-            if (pin.side === "right")
-              ctx.fillText(pin.name, pp.x + offset, pp.y + 3);
-            if (pin.side === "top") ctx.fillText(pin.name, pp.x, pp.y - offset);
-            if (pin.side === "bottom")
-              ctx.fillText(pin.name, pp.x, pp.y + offset + 4);
-          });
-        });
-      }
-
-      let wireStart2 = null;
-      function circuitMouseDown(e) {
-        const rect = e.target.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-
-        if (activeTool === "wire") {
-          // Check if near a pin
-          for (const comp of circuitComps) {
-            for (const pin of comp.def.pins || []) {
-              const pp = getPinPos(comp, pin);
-              if (Math.hypot(mx - pp.x, my - pp.y) < 8) {
-                wireStart2 = { ...pp };
-                return;
+      // أحداث الماوس
+      function initCanvasEvents() {
+        canvas.addEventListener("mousedown", (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+          const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+          // Pin hit?
+          let hitPin = null;
+          for (let comp of circuitComponents) {
+            for (let pin of comp.pins) {
+              const pos = getPinPos(comp, pin.name);
+              if (pos && Math.hypot(mx - pos.x, my - pos.y) < 8) {
+                hitPin = { comp, pin: pin.name, x: pos.x, y: pos.y };
+                break;
               }
             }
+            if (hitPin) break;
           }
+          if (hitPin) {
+            wireMode.active = true;
+            wireMode.fromComp = hitPin.comp;
+            wireMode.fromPin = hitPin.pin;
+            wireMode.fromX = hitPin.x;
+            wireMode.fromY = hitPin.y;
+            wireMode.toX = mx;
+            wireMode.toY = my;
+            drawCanvas();
+            return;
+          }
+          // component drag
+          for (let i = circuitComponents.length - 1; i >= 0; i--) {
+            const c = circuitComponents[i];
+            if (
+              mx >= c.x &&
+              mx <= c.x + c.width &&
+              my >= c.y &&
+              my <= c.y + c.height
+            ) {
+              selectedCompId = c.id;
+              dragData.dragging = true;
+              dragData.compId = c.id;
+              dragData.offsetX = mx - c.x;
+              dragData.offsetY = my - c.y;
+              updatePropsPanel(c);
+              drawCanvas();
+              return;
+            }
+          }
+          selectedCompId = null;
+          updatePropsPanel(null);
+          drawCanvas();
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+          if (dragData.dragging) {
+            const rect = canvas.getBoundingClientRect();
+            let mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+            let my = (e.clientY - rect.top) * (canvas.height / rect.height);
+            const comp = circuitComponents.find(
+              (c) => c.id === dragData.compId,
+            );
+            if (comp) {
+              comp.x = Math.min(
+                Math.max(mx - dragData.offsetX, 0),
+                canvas.width - comp.width,
+              );
+              comp.y = Math.min(
+                Math.max(my - dragData.offsetY, 0),
+                canvas.height - comp.height,
+              );
+              drawCanvas();
+            }
+          }
+          if (wireMode.active) {
+            const rect = canvas.getBoundingClientRect();
+            wireMode.toX =
+              (e.clientX - rect.left) * (canvas.width / rect.width);
+            wireMode.toY =
+              (e.clientY - rect.top) * (canvas.height / rect.height);
+            drawCanvas();
+          }
+        });
+
+        canvas.addEventListener("mouseup", (e) => {
+          if (dragData.dragging) {
+            dragData.dragging = false;
+            drawCanvas();
+          }
+          if (wireMode.active) {
+            const rect = canvas.getBoundingClientRect();
+            const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+            let targetPin = null;
+            for (let comp of circuitComponents) {
+              for (let pin of comp.pins) {
+                const pos = getPinPos(comp, pin.name);
+                if (pos && Math.hypot(mx - pos.x, my - pos.y) < 8) {
+                  targetPin = { comp, pin: pin.name };
+                  break;
+                }
+              }
+              if (targetPin) break;
+            }
+            if (
+              targetPin &&
+              wireMode.fromComp &&
+              targetPin.comp.id !== wireMode.fromComp.id
+            ) {
+              wires.push({
+                fromCompId: wireMode.fromComp.id,
+                fromPin: wireMode.fromPin,
+                toCompId: targetPin.comp.id,
+                toPin: targetPin.pin,
+              });
+            }
+            wireMode.active = false;
+            drawCanvas();
+          }
+        });
+      }
+
+      // خصائص القطعة
+      function updatePropsPanel(comp) {
+        const container = document.getElementById("propsContent");
+        if (!comp) {
+          container.innerHTML =
+            '<div style="color:var(--muted); text-align:center; padding:20px;">اختر قطعة لعرض خصائصها</div>';
           return;
         }
-
-        circuitComps.forEach((c) => (c.selected = false));
-        cSelected = null;
-        const hit = circuitComps
-          .slice()
-          .reverse()
-          .find(
-            (c) =>
-              mx >= c.x &&
-              mx <= c.x + c.def.w &&
-              my >= c.y &&
-              my <= c.y + c.def.h,
-          );
-        if (hit) {
-          hit.selected = true;
-          cSelected = hit;
-          cDragging = hit;
-          cDragOffX = mx - hit.x;
-          cDragOffY = my - hit.y;
-          showCircuitProps(hit);
+        let html = `<div class="prop-group"><span class="prop-label">القطعة</span><div class="prop-value">${comp.compDef.name}</div></div>`;
+        if (comp.compDef.model === "resistor") {
+          html += `<div class="prop-group"><span class="prop-label">المقاومة (Ω)</span><input class="prop-value" type="number" value="${comp.values.value}" onchange="updateCompValue('${comp.id}','value', this.value)"></div>`;
+          html += `<div class="prop-group"><span class="prop-label">التيار (mA)</span><div class="prop-value" id="current_${comp.id}">--</div></div>`;
         }
-        drawCircuit();
+        if (comp.compDef.model === "voltage") {
+          html += `<div class="prop-group"><span class="prop-label">الجهد (V)</span><input class="prop-value" type="number" step="0.1" value="${comp.values.value}" onchange="updateCompValue('${comp.id}','value', this.value)"></div>`;
+        }
+        if (comp.compDef.model === "led") {
+          html += `<button class="btn" style="width:100%;" onclick="toggleLED('${comp.id}')">تبديل LED</button>`;
+        }
+        if (comp.compDef.model === "servo") {
+          html += `<div class="prop-group"><span class="prop-label">الزاوية (0-180)</span><input class="prop-value" type="range" min="0" max="180" value="${comp.values.angle}" onchange="updateCompValue('${comp.id}','angle', this.value)"></div>`;
+        }
+        if (comp.compDef.model === "lcd") {
+          html += `<div class="prop-group"><span class="prop-label">النص</span><input class="prop-value" type="text" value="${comp.values.text}" onchange="updateCompValue('${comp.id}','text', this.value)"></div>`;
+        }
+        if (comp.compDef.model === "button") {
+          html += `<button class="btn" style="width:100%;" onclick="toggleButton('${comp.id}')">اضغط الزر (محاكاة)</button>`;
+        }
+        container.innerHTML = html;
       }
 
-      function circuitMouseMove(e) {
-        if (!cDragging) return;
-        const rect = e.target.getBoundingClientRect();
-        cDragging.x = e.clientX - rect.left - cDragOffX;
-        cDragging.y = e.clientY - rect.top - cDragOffY;
-        drawCircuit();
+      window.updateCompValue = function (id, key, val) {
+        const comp = circuitComponents.find((c) => c.id === id);
+        if (comp) {
+          comp.values[key] =
+            key === "value" || key === "angle" ? parseFloat(val) : val;
+          drawCanvas();
+        }
+      };
+      window.toggleLED = function (id) {
+        const comp = circuitComponents.find((c) => c.id === id);
+        if (comp) comp.values.state = !comp.values.state;
+        drawCanvas();
+      };
+      window.toggleButton = function (id) {
+        const comp = circuitComponents.find((c) => c.id === id);
+        if (comp) comp.values.pressed = !comp.values.pressed;
+        drawCanvas();
+      };
+
+      // تحليل كهربائي بسيط
+      function analyzeCircuit() {
+        circuitComponents.forEach((comp) => {
+          if (comp.compDef.model === "resistor") {
+            let voltage = 0;
+            wires.forEach((w) => {
+              if (w.toCompId === comp.id || w.fromCompId === comp.id) {
+                const otherId =
+                  w.toCompId === comp.id ? w.fromCompId : w.toCompId;
+                const other = circuitComponents.find((c) => c.id === otherId);
+                if (other && other.compDef.model === "voltage") {
+                  voltage = other.values.value || 9;
+                }
+              }
+            });
+            const resistance = comp.values.value;
+            const current = voltage / resistance;
+            const currentMa = (current * 1000).toFixed(2);
+            const span = document.getElementById(`current_${comp.id}`);
+            if (span) span.innerText = currentMa + " mA";
+          }
+        });
       }
 
-      function circuitMouseUp(e) {
-        if (wireStart2 && activeTool === "wire") {
-          const rect = e.target.getBoundingClientRect();
-          const mx = e.clientX - rect.left;
-          const my = e.clientY - rect.top;
-          circuitWires.push({
-            x1: wireStart2.x,
-            y1: wireStart2.y,
-            x2: mx,
-            y2: my,
+      // محاكاة الكود (دعم Unicode في Serial)
+      let arduinoPins = new Array(50).fill(0);
+      function parseAndRunCode() {
+        const code = document.getElementById("codeEditor").value;
+        // digitalWrite
+        const digitalWrites = code.matchAll(
+          /digitalWrite\((\d+),\s*(HIGH|LOW)\)/gi,
+        );
+        for (let match of digitalWrites) {
+          const pin = parseInt(match[1]);
+          const state = match[2].toUpperCase() === "HIGH" ? 1 : 0;
+          arduinoPins[pin] = state;
+          circuitComponents.forEach((comp) => {
+            if (
+              comp.compDef.model === "led" &&
+              comp.pins.some((p) => p.name === "+")
+            )
+              comp.values.state = state === 1;
+            if (
+              comp.compDef.model === "buzzer" &&
+              comp.pins.some((p) => p.name === "+")
+            )
+              comp.values.state = state === 1;
+            if (
+              comp.compDef.model === "relay" &&
+              comp.pins.some((p) => p.name === "IN")
+            )
+              comp.values.active = state === 1;
           });
-          wireStart2 = null;
-          notify("〰️ سلك أُضيف", "success");
-          drawCircuit();
         }
-        cDragging = null;
-      }
-
-      function circuitDblClick(e) {
-        const rect = e.target.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        const hit = circuitComps
-          .slice()
-          .reverse()
-          .find(
-            (c) =>
-              mx >= c.x &&
-              mx <= c.x + c.def.w &&
-              my >= c.y &&
-              my <= c.y + c.def.h,
-          );
-        if (hit) {
-          circuitComps = circuitComps.filter((c) => c.id !== hit.id);
-          notify(`🗑 ${hit.def.label} حُذف`, "info");
-          drawCircuit();
+        // servo.write
+        const servoWrites = code.matchAll(/(\w+)\.write\((\d+)\)/gi);
+        for (let match of servoWrites) {
+          const angle = parseInt(match[2]);
+          circuitComponents.forEach((comp) => {
+            if (comp.compDef.model === "servo") comp.values.angle = angle;
+          });
         }
-      }
-
-      function showCircuitProps(comp) {
-        const tab = document.getElementById("circuitTab-properties");
-        tab.innerHTML = `
-    <div style="margin-bottom:12px">
-      <div style="font-size:20px;margin-bottom:4px">${comp.def.icon}</div>
-      <div style="font-weight:700">${comp.def.label}</div>
-      <div style="font-size:11px;color:var(--muted)">${comp.type.toUpperCase()}</div>
-    </div>
-    <div class="prop-group">
-      <div class="prop-group-title">الأبعاد</div>
-      <div class="prop-row"><span class="prop-label">العرض</span><span>${comp.def.w}px</span></div>
-      <div class="prop-row"><span class="prop-label">الارتفاع</span><span>${comp.def.h}px</span></div>
-    </div>
-    <div class="prop-group">
-      <div class="prop-group-title">المنافذ (${comp.def.pins?.length || 0})</div>
-      ${comp.def.pins?.map((p) => `<div class="prop-row"><span class="prop-label">${p.name}</span><span class="badge blue">${p.side}</span></div>`).join("") || ""}
-    </div>
-    <button class="btn" onclick="rotateComp(${comp.id})" style="width:100%;justify-content:center;margin-bottom:6px">🔄 تدوير</button>
-    <button class="btn" onclick="deleteCircComp(${comp.id})" style="width:100%;justify-content:center;background:rgba(239,68,68,0.1);border-color:var(--danger);color:var(--danger)">🗑 حذف</button>
-  `;
-        // Switch to properties tab
-        document
-          .querySelectorAll(".circuit-panel-tab")
-          .forEach((t) => t.classList.remove("active"));
-        document
-          .querySelectorAll('[id^="circuitTab-"]')
-          .forEach((t) => (t.style.display = "none"));
-        document
-          .querySelectorAll(".circuit-panel-tab")[1]
-          .classList.add("active");
-        document.getElementById("circuitTab-properties").style.display = "";
-      }
-
-      function rotateComp(id) {
-        const c = circuitComps.find((c) => c.id === id);
-        if (c) {
-          c.rotation = (c.rotation + 90) % 360;
-          drawCircuit();
+        // lcd.print
+        const lcdPrints = code.matchAll(/lcd\.print\(["'](.+?)["']\)/gi);
+        for (let match of lcdPrints) {
+          const text = match[1];
+          circuitComponents.forEach((comp) => {
+            if (comp.compDef.model === "lcd") comp.values.text = text;
+          });
         }
-      }
-
-      function deleteCircComp(id) {
-        circuitComps = circuitComps.filter((c) => c.id !== id);
-        drawCircuit();
-        notify("🗑 تم الحذف", "info");
-      }
-
-      function setTool(tool) {
-        activeTool = tool;
-        document
-          .querySelectorAll(".tool-btn-circle")
-          .forEach((b) => b.classList.remove("active"));
-        document.getElementById(`tool-${tool}`)?.classList.add("active");
-        document.getElementById("circuitCanvas").style.cursor =
-          tool === "wire" ? "crosshair" : tool === "text" ? "text" : "default";
-      }
-
-      function switchCircuitTab(tabName, el) {
-        document
-          .querySelectorAll(".circuit-panel-tab")
-          .forEach((t) => t.classList.remove("active"));
-        el.classList.add("active");
-        document
-          .querySelectorAll('[id^="circuitTab-"]')
-          .forEach((t) => (t.style.display = "none"));
-        document.getElementById(`circuitTab-${tabName}`).style.display = "";
-      }
-
-      function rotateSelected() {
-        if (cSelected) rotateComp(cSelected.id);
-      }
-      function deleteSelected() {
-        if (cSelected) {
-          deleteCircComp(cSelected.id);
-          cSelected = null;
+        // Serial.print / Serial.println (دعم Unicode)
+        const serialPrintAll = code.matchAll(
+          /Serial\.(print|println)\((["'])(.*?)\2\)/gi,
+        );
+        for (let match of serialPrintAll) {
+          const cmd = match[1];
+          let content = match[3];
+          if (cmd === "println") addSerialLine(content, true);
+          else addSerialLine(content, false);
         }
-      }
-      function duplicateSelected() {
-        if (!cSelected) return;
-        const c = {
-          ...cSelected,
-          id: Date.now(),
-          x: cSelected.x + 20,
-          y: cSelected.y + 20,
-          selected: false,
-        };
-        circuitComps.push(c);
-        drawCircuit();
-        notify("📋 نُسخت القطعة", "success");
+        // Serial.println بدون وسائط
+        const emptyPrintln = /Serial\.println\s*\(\s*\)/gi;
+        if (emptyPrintln.test(code)) addSerialLine("", true);
+        drawCanvas();
       }
 
-      function undo() {
-        notify("↩️ تراجع (قريباً)", "info");
-      }
-      function redo() {
-        notify("↪️ إعادة (قريباً)", "info");
-      }
-
-      function fitToScreen() {
-        circuitComps.forEach((c, i) => {
-          c.x = 100 + (i % 3) * 220;
-          c.y = 100 + Math.floor(i / 3) * 200;
-        });
-        drawCircuit();
-        notify("📐 تم الترتيب", "success");
-      }
-
-      function toggleGrid() {
-        showGrid = !showGrid;
-        drawCircuit();
-      }
-
-      function exportCircuit() {
-        const data = {
-          components: circuitComps.map((c) => ({
-            type: c.type,
-            x: c.x,
-            y: c.y,
-          })),
-          wires: circuitWires,
-        };
-        const blob = new Blob([JSON.stringify(data, null, 2)], {
-          type: "application/json",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "circuit.json";
-        a.click();
-        URL.revokeObjectURL(url);
-        notify("📤 تم تصدير الدائرة", "success");
-      }
-
-      function saveCircuit() {
-        notify("💾 تم الحفظ (localStorage)", "success");
-      }
-
-      // ==============================
-      // ESP32 PINOUT
-      // ==============================
-      function initPinout() {
-        const pins = [
-          { name: "3V3", type: "power" },
-          { name: "GND", type: "gnd" },
-          { name: "GPIO0", type: "gpio" },
-          { name: "GPIO2", type: "gpio" },
-          { name: "GPIO4", type: "gpio" },
-          { name: "GPIO5", type: "gpio" },
-          { name: "GPIO12", type: "adc" },
-          { name: "GPIO13", type: "gpio" },
-          { name: "GPIO14", type: "adc" },
-          { name: "GPIO15", type: "gpio" },
-          { name: "GPIO16", type: "gpio" },
-          { name: "GPIO17", type: "gpio" },
-          { name: "GPIO18", type: "gpio" },
-          { name: "GPIO19", type: "gpio" },
-          { name: "GPIO21 (SDA)", type: "gpio" },
-          { name: "GPIO22 (SCL)", type: "gpio" },
-          { name: "GPIO23", type: "gpio" },
-          { name: "GPIO25", type: "gpio" },
-          { name: "GPIO26", type: "gpio" },
-          { name: "GPIO27", type: "gpio" },
-          { name: "GPIO32", type: "adc" },
-          { name: "GPIO33", type: "adc" },
-          { name: "GPIO34", type: "adc" },
-          { name: "GPIO35", type: "adc" },
-          { name: "5V", type: "power" },
-          { name: "GND", type: "gnd" },
-        ];
-        const grid = document.getElementById("esp32Pinout");
-        grid.innerHTML = pins
-          .map(
-            (p) => `
-    <div class="pin" onclick="notify('${p.name} - ${p.type.toUpperCase()}','info')">
-      <div class="pin-dot ${p.type}"></div>
-      <span class="pin-label">${p.name}</span>
-    </div>`,
-          )
-          .join("");
-      }
-
-      // ==============================
-      // TABS
-      // ==============================
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document
-            .querySelectorAll(".tab-btn")
-            .forEach((b) => b.classList.remove("active"));
-          document
-            .querySelectorAll(".panel")
-            .forEach((p) => p.classList.remove("active"));
-          btn.classList.add("active");
-          document
-            .getElementById(`panel-${btn.dataset.panel}`)
-            .classList.add("active");
-        });
-      });
-
-      // ==============================
-      // NOTIFY
-      // ==============================
-      function notify(msg, type = "info") {
-        const container = document.getElementById("notif");
-        const div = document.createElement("div");
-        div.className = `notif-item ${type}`;
-        div.textContent = msg;
-        container.appendChild(div);
-        setTimeout(() => div.remove(), 3500);
-      }
-
-      // ==============================
-      // INIT
-      // ==============================
-      window.addEventListener("DOMContentLoaded", () => {
-        initIDE();
-        initSimulator();
-        initCircuit();
-
-        // Resize canvases on window resize
-        window.addEventListener("resize", () => {
-          const sc = document.getElementById("simCanvas");
-          const sca = document.getElementById("simCanvasArea");
-          if (sca) {
-            sc.width = sca.clientWidth;
-            sc.height = sca.clientHeight;
-            drawSim();
-          }
-
-          const cc = document.getElementById("circuitCanvas");
-          const cw = document.getElementById("circuitCanvasWrap");
-          if (cw) {
-            cc.width = cw.clientWidth;
-            cc.height = cw.clientHeight;
-            drawCircuit();
-          }
-        });
-      });
-      // ==============================
-      // SIMULATION ENGINE (بدون أجهزة)
-      // ==============================
-      let simulationInterval = null;
-      let simVirtualTime = 0;
-      let simPinStates = new Array(50).fill(0);
-      let simPinModes = new Array(50).fill("INPUT");
-      let simLoopCode = "";
-      let simSetupCode = "";
-      let simRuntimeContext = null;
-
-      function addSimulationOutput(text, type = "info") {
+      function addSerialLine(msg, newLine = true) {
         const out = document.getElementById("serialOutput");
         const div = document.createElement("div");
-        div.className = "serial-line " + type;
-        div.textContent = `[محاكاة ${simVirtualTime}ms] ${text}`;
+        div.className = "serial-line";
+        div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
         out.appendChild(div);
-        if (autoScroll) out.scrollTop = out.scrollHeight;
+        out.scrollTop = out.scrollHeight;
       }
 
-      function clearSimulation() {
-        if (simulationInterval) clearInterval(simulationInterval);
-        simulationInterval = null;
-        simVirtualTime = 0;
-        // لا نمسح Serial Monitor هنا بل نضيف سطر فصل
-        addSimulationOutput("■ تم إيقاف المحاكاة", "warn");
-        const runBtn = document.getElementById("runSimulationBtn");
-        const stopBtn = document.getElementById("stopSimulationBtn");
-        if (runBtn) runBtn.style.display = "";
-        if (stopBtn) stopBtn.style.display = "none";
-      }
-
-      function evaluateArduinoCodeBlock(codeBlock) {
-        const lines = codeBlock.split("\n");
-        for (let line of lines) {
-          line = line.trim();
-          // التعامل مع Serial.print
-          let printMatch = line.match(/Serial\.print\((.*?)\)/);
-          if (printMatch) {
-            let content = printMatch[1];
-            // إزالة علامات التنصيص إذا وجدت
-            if (content.startsWith('"') && content.endsWith('"')) {
-              content = content.slice(1, -1);
-            }
-            addSimulationOutput(content, "");
-            continue;
-          }
-          // التعامل مع Serial.println (يطبع السطر ثم يضيف سطر جديد)
-          let printlnMatch = line.match(/Serial\.println\((.*?)\)/);
-          if (printlnMatch) {
-            let content = printlnMatch[1];
-            if (content.startsWith('"') && content.endsWith('"')) {
-              content = content.slice(1, -1);
-            }
-            addSimulationOutput(content, "");
-            // إضافة سطر فارغ (اختياري - لتمثيل println)
-            // addSimulationOutput('', '');
-            continue;
-          }
-          // باقي الأوامر كما هي...
-          if (line.startsWith("pinMode")) {
-            let match = line.match(/pinMode\((\d+),\s*(INPUT|OUTPUT)\)/i);
-            if (match) {
-              let pin = parseInt(match[1]);
-              let mode = match[2].toUpperCase();
-              simPinModes[pin] = mode;
-              addSimulationOutput(`🔌 pin ${pin} وضع ${mode}`, "info");
-            }
-          } else if (line.startsWith("digitalWrite")) {
-            let match = line.match(/digitalWrite\((\d+),\s*(HIGH|LOW)\)/i);
-            if (match) {
-              let pin = parseInt(match[1]);
-              let val = match[2].toUpperCase() === "HIGH" ? 1 : 0;
-              simPinStates[pin] = val;
-              addSimulationOutput(
-                `⚡ pin ${pin} = ${val === 1 ? "HIGH" : "LOW"}`,
-                "info",
-              );
-            }
-          } else if (line.startsWith("delay")) {
-            let match = line.match(/delay\((\d+)\)/);
-            if (match) {
-              let ms = parseInt(match[1]);
-              addSimulationOutput(`⏳ تأخير ${ms} مللي (محاكى)`, "warn");
-            }
-          } else if (line.startsWith("millis")) {
-            addSimulationOutput(`⏱️ millis() = ${simVirtualTime}`, "info");
-          }
-        }
-      }
+      let simulationTimer = null;
       function runSimulation() {
-        if (simulationInterval) clearSimulation();
-
-        // إظهار زر الإيقاف وإخفاء زر التشغيل
-        const runBtn = document.getElementById("runSimulationBtn");
-        const stopBtn = document.getElementById("stopSimulationBtn");
-        if (runBtn) runBtn.style.display = "none";
-        if (stopBtn) stopBtn.style.display = "";
-
-        // مسح المخرجات السابقة
-        clearSerial(); // استخدم المسح الموجود
-
-        const fullCode = document.getElementById("codeEditor").value;
-        // استخراج setup و loop
-        const setupMatch = fullCode.match(
-          /void\s+setup\s*\(\s*\)\s*\{([\s\S]*?)\}/,
-        );
-        const loopMatch = fullCode.match(
-          /void\s+loop\s*\(\s*\)\s*\{([\s\S]*?)\}/,
-        );
-
-        if (!setupMatch && !loopMatch) {
-          addSimulationOutput(
-            "❌ لم يتم العثور على دوال setup() أو loop()",
-            "error",
-          );
-          if (runBtn) runBtn.style.display = "";
-          if (stopBtn) stopBtn.style.display = "none";
-          return;
-        }
-
-        simSetupCode = setupMatch ? setupMatch[1] : "";
-        simLoopCode = loopMatch ? loopMatch[1] : "";
-
-        // إعادة تعيين الحالة
-        simPinStates.fill(0);
-        simPinModes.fill("INPUT");
-        simVirtualTime = 0;
-
-        addSimulationOutput("🔁 بدء محاكاة الكود...", "info");
-
-        // تنفيذ setup مرة واحدة
-        evaluateArduinoCodeBlock(simSetupCode);
-
-        // تشغيل loop كل 300 مللي
-        simulationInterval = setInterval(() => {
-          evaluateArduinoCodeBlock(simLoopCode);
-          simVirtualTime += 300;
+        if (simulationTimer) clearInterval(simulationTimer);
+        isSimulating = true;
+        parseAndRunCode();
+        simulationTimer = setInterval(() => {
+          parseAndRunCode();
+          analyzeCircuit();
         }, 300);
+        addSerialLine("🚀 بدء المحاكاة", true);
       }
-
       function stopSimulation() {
-        clearSimulation();
+        if (simulationTimer) clearInterval(simulationTimer);
+        isSimulating = false;
+        addSerialLine("⏹️ إيقاف المحاكاة", true);
+      }
+      function sendSerialCmd() {
+        const input = document.getElementById("serialInput");
+        const val = input.value;
+        addSerialLine("> " + val, true);
+        input.value = "";
+        if (val === "status") addSerialLine("النظام يعمل، 4 مواقف متاحة", true);
+        else addSerialLine("أمر غير معروف", true);
       }
 
-      // ربط الأزرار
-      document
-        .getElementById("runSimulationBtn")
-        ?.addEventListener("click", runSimulation);
-      document
-        .getElementById("stopSimulationBtn")
-        ?.addEventListener("click", stopSimulation);
+      // بناء مكتبة القطع في الواجهة
+      function buildComponentLibrary() {
+        const container = document.getElementById("compList");
+        const cats = [...new Map(COMPONENTS.map((c) => [c.cat, c.cat])).keys()];
+        cats.forEach((cat) => {
+          const catDiv = document.createElement("div");
+          catDiv.className = "comp-cat";
+          catDiv.innerText = cat;
+          container.appendChild(catDiv);
+          COMPONENTS.filter((c) => c.cat === cat).forEach((comp) => {
+            const item = document.createElement("div");
+            item.className = "comp-item";
+            item.draggable = true;
+            item.innerHTML = `<div class="comp-icon">${comp.icon}</div><div class="comp-info"><div class="comp-name">${comp.name}</div><div class="comp-desc">${comp.desc}</div></div>`;
+            item.addEventListener("dragstart", (e) => {
+              e.dataTransfer.setData("compType", comp.id);
+              e.dataTransfer.effectAllowed = "copy";
+            });
+            container.appendChild(item);
+          });
+        });
+      }
+
+      // تهيئة الكانفاس والسحب والإفلات
+      function initCanvasAndDrop() {
+        canvas = document.getElementById("circuitCanvas");
+        const area = document.getElementById("canvasArea");
+        canvas.width = area.clientWidth;
+        canvas.height = area.clientHeight;
+        canvasWidth = canvas.width;
+        canvasHeight = canvas.height;
+        ctx = canvas.getContext("2d");
+        initCanvasEvents();
+        canvas.addEventListener("dragover", (e) => e.preventDefault());
+        canvas.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const compType = e.dataTransfer.getData("compType");
+          const compDef = COMPONENTS.find((c) => c.id === compType);
+          if (compDef) {
+            const rect = canvas.getBoundingClientRect();
+            let x =
+              (e.clientX - rect.left) * (canvas.width / rect.width) -
+              compDef.width / 2;
+            let y =
+              (e.clientY - rect.top) * (canvas.height / rect.height) -
+              compDef.height / 2;
+            addComponent(compDef, x, y);
+          }
+        });
+        window.addEventListener("resize", () => {
+          canvas.width = area.clientWidth;
+          canvas.height = area.clientHeight;
+          drawCanvas();
+        });
+        drawCanvas();
+      }
+
+      // حفظ وتحميل ومسح
+      function saveProject() {
+        const data = { components: circuitComponents, wires: wires };
+        localStorage.setItem("embedded_project", JSON.stringify(data));
+        alert("تم حفظ المشروع");
+      }
+      function loadProject() {
+        const data = localStorage.getItem("embedded_project");
+        if (data) {
+          const parsed = JSON.parse(data);
+          circuitComponents = parsed.components;
+          wires = parsed.wires;
+          drawCanvas();
+          alert("تم تحميل المشروع");
+        }
+      }
+      function clearCanvas() {
+        circuitComponents = [];
+        wires = [];
+        selectedCompId = null;
+        wireMode.active = false;
+        drawCanvas();
+        updatePropsPanel(null);
+      }
+      function fitView() {}
+      function deleteLastWire() {
+        if (wires.length > 0) wires.pop();
+        drawCanvas();
+      }
+
+      // IDE ومحرر
+      function initIDE() {
+        const editor = document.getElementById("codeEditor");
+        editor.value = `#include <ESP32Servo.h>
+#include <LiquidCrystal_I2C.h>
+
+Servo myServo;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+  Serial.println("Привет, мир!");  // روسي
+  Serial.println("Как дела?");
+  Serial.println("مرحباً بالعالم"); // عربي
+  pinMode(13, OUTPUT);
+  myServo.attach(9);
+  lcd.init();
+  lcd.backlight();
+}
+
+void loop() {
+  digitalWrite(13, HIGH);
+  delay(500);
+  digitalWrite(13, LOW);
+  delay(500);
+  myServo.write(90);
+  delay(1000);
+  myServo.write(0);
+  lcd.setCursor(0,0);
+  lcd.print("Hello World");
+  delay(2000);
+}`;
+        updateLineNumbers();
+        editor.addEventListener("input", updateLineNumbers);
+        document.querySelectorAll(".ide-tab").forEach((tab) => {
+          tab.addEventListener("click", () => {
+            document
+              .querySelectorAll(".ide-tab")
+              .forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+            const target = tab.dataset.tab;
+            document.getElementById("codePane").style.display =
+              target === "code" ? "flex" : "none";
+            document.getElementById("serialPane").style.display =
+              target === "serial" ? "flex" : "none";
+          });
+        });
+      }
+      function updateLineNumbers() {
+        const editor = document.getElementById("codeEditor");
+        const lines = editor.value.split("\n").length;
+        document.getElementById("lineNumbers").innerHTML = Array.from(
+          { length: lines },
+          (_, i) => i + 1,
+        ).join("<br>");
+      }
+
+      window.addEventListener("load", () => {
+        buildComponentLibrary();
+        initCanvasAndDrop();
+        initIDE();
+        // لا نضيف أي قطع افتراضية
+      });
     </script>
   </body>
 </html>
