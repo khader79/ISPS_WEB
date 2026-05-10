@@ -1,17 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import {
-  getDatabase,
-  ref,
-  onValue,
-  set,
-  update,
-  runTransaction,
-  get,
+  getDatabase, ref, onValue, set, update, runTransaction, get,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 import {
-  getAuth,
-  signOut,
-  onAuthStateChanged,
+  getAuth, signOut, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -25,49 +17,35 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// DOM Elements
-const slotsGrid = document.getElementById("slotsGrid");
-const availableCount = document.getElementById("availableCount");
-const occupiedCount = document.getElementById("occupiedCount");
-const activeReservationSpan = document.getElementById("activeReservation");
-const slotSelect = document.getElementById("slotSelect");
-const durationMinutes = document.getElementById("durationMinutes");
-const createReservationBtn = document.getElementById("createReservationBtn");
-const cancelReservationBtn = document.getElementById("cancelReservationBtn");
-const activeReservationCard = document.getElementById("activeReservationCard");
-const reservationNumberSpan = document.getElementById("reservationNumber");
-const expiryCountdownSpan = document.getElementById("expiryCountdown");
-const gateOtpInput = document.getElementById("gateOtpInput");
-const submitOtpBtn = document.getElementById("submitOtpBtn");
-const gateStatusMsg = document.getElementById("gateStatusMsg");
-const espStatus = document.getElementById("espStatus");
-const wifiStatus = document.getElementById("wifiStatus");
-const gateEntryStatus = document.getElementById("gateEntryStatus");
-const systemLog = document.getElementById("systemLog");
-const reserveStatus = document.getElementById("reserveStatus");
-const userEmailSpan = document.getElementById("userEmail");
-const errorLogDiv = document.getElementById("errorLog");
-
+const $ = id => document.getElementById(id);
+const gateStatusMsg = $("gateStatusMsg");
+const submitOtpBtn = $("submitOtpBtn");
 let currentUser = null;
 let currentReservation = null;
 let countdownInterval = null;
+let gateRespUnsubscribe = null;
 
-function showStatus(el, msg, isError = false) {
-  if (!el) return;
-  el.textContent = msg;
-  el.style.color = isError ? "#f87171" : "#4ade80";
-  setTimeout(() => {
-    if (el.textContent === msg) el.textContent = "";
-  }, 4000);
+function msg(text, type = "info") {
+  const el = $("toast");
+  el.textContent = text;
+  el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 3500);
 }
 
-function showError(msg) {
-  if (errorLogDiv) {
-    errorLogDiv.textContent = msg;
-    errorLogDiv.classList.remove("hidden");
-    setTimeout(() => errorLogDiv.classList.add("hidden"), 5000);
+function showStatus(el, text, isError = false) {
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? "#f87171" : "#4ade80";
+  clearTimeout(el._st);
+  el._st = setTimeout(() => { el.textContent = ""; el.style.color = ""; }, 4000);
+}
+
+function resetOtpBtn() {
+  if (submitOtpBtn) {
+    submitOtpBtn.disabled = false;
+    submitOtpBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> فتح البوابة`;
   }
-  console.error(msg);
 }
 
 function generateOTP() {
@@ -77,150 +55,87 @@ function generateOTP() {
 async function refreshUserReservation() {
   if (!currentUser) return;
   try {
-    const reservationsSnap = await get(ref(db, "reservations"));
-    const reservations = reservationsSnap.val() || {};
+    const snap = await get(ref(db, "reservations"));
+    const reservations = snap.val() || {};
     let found = null;
     const now = Date.now();
-    for (let key in reservations) {
+    for (const key in reservations) {
       const r = reservations[key];
-      if (
-        r.userId === currentUser.uid &&
-        r.status === "ACTIVE" &&
-        r.expireTime > now &&
-        r.otp?.active === true
-      ) {
-        found = {
-          reservationId: r.reservationId,
-          slotId: r.slotId,
-          expireAt: r.expireTime,
-        };
+      if (r.userId === currentUser.uid && r.status === "ACTIVE" && r.expireTime > now) {
+        found = { reservationId: r.reservationId, slotId: r.slotId, expireAt: r.expireTime, otpActive: r.otp?.active };
         break;
       }
     }
     currentReservation = found;
-    if (currentReservation) {
-      activeReservationSpan.innerText = `الموقف ${currentReservation.slotId}`;
-      activeReservationCard.classList.remove("hidden");
-      reservationNumberSpan.innerText =
-        currentReservation.reservationId.slice(-12);
-      startCountdown(currentReservation.expireAt);
+    $("activeReservationSection").classList.toggle("hidden", !found);
+    $("bookingSection").classList.toggle("hidden", !!found);
+    $("activeReservationSpan").textContent = found ? "1" : "0";
+    if (found) {
+      $("activeSlotDisplay").textContent = found.slotId;
+      $("activeReservationId").textContent = found.reservationId.slice(-8).toUpperCase();
+      startCountdown(found.expireAt);
     } else {
-      activeReservationSpan.innerText = "لا يوجد";
-      activeReservationCard.classList.add("hidden");
       if (countdownInterval) clearInterval(countdownInterval);
+      $("countdownDisplay").textContent = "";
     }
-  } catch (err) {
-    showError(err.message);
-  }
+  } catch { /* ignore */ }
 }
 
 function startCountdown(expireAt) {
   if (countdownInterval) clearInterval(countdownInterval);
   const update = () => {
-    const remaining = expireAt - Date.now();
-    if (remaining <= 0) {
+    const rem = expireAt - Date.now();
+    if (rem <= 0) {
       clearInterval(countdownInterval);
-      expiryCountdownSpan.innerText = "انتهى";
-      activeReservationCard.classList.add("hidden");
       currentReservation = null;
-      activeReservationSpan.innerText = "لا يوجد";
       refreshUserReservation();
-    } else {
-      const mins = Math.floor(remaining / 60000);
-      const secs = Math.floor((remaining % 60000) / 1000);
-      expiryCountdownSpan.innerText = `${mins}:${secs.toString().padStart(2, "0")}`;
+      msg("انتهت صلاحية الحجز", "info");
     }
+    const el = $("countdownDisplay");
+    el.textContent = rem > 0
+      ? `${Math.floor(rem / 60000)}:${Math.floor((rem % 60000) / 1000).toString().padStart(2, "0")}`
+      : "انتهى";
+    el.className = `timer ${rem > 120000 ? "ok" : rem > 30000 ? "warn" : "critical"}`;
   };
   update();
   countdownInterval = setInterval(update, 1000);
 }
 
 async function createReservation() {
-  if (!currentUser) {
-    showStatus(reserveStatus, "الرجاء تسجيل الدخول أولاً", true);
-    return;
-  }
-  const slotId = slotSelect.value;
-  if (!slotId) {
-    showStatus(reserveStatus, "اختر موقفاً أولاً", true);
-    return;
-  }
-  const minutes = parseInt(durationMinutes.value);
-  if (isNaN(minutes) || minutes < 5) {
-    showStatus(reserveStatus, "المدة لا تقل عن 5 دقائق", true);
-    return;
-  }
+  if (!currentUser) { msg("الرجاء تسجيل الدخول", "err"); return; }
+  if (currentReservation) { msg("لديك حجز نشط بالفعل", "err"); return; }
+  const slotId = $("slotSelect").value;
+  if (!slotId) { msg("اختر موقفاً", "err"); return; }
+  const minutes = parseInt($("durationMinutes").value);
+  if (isNaN(minutes) || minutes < 5) { msg("المدة لا تقل عن 5 دقائق", "err"); return; }
   const now = Date.now();
   const expireAt = now + minutes * 60 * 1000;
   const reservationId = `RES_${now}_${currentUser.uid.slice(-6)}`;
   const otpCode = generateOTP();
   try {
-    const slotRef = ref(db, `slots/${slotId}`);
-    const result = await runTransaction(slotRef, (slot) => {
+    const result = await runTransaction(ref(db, `slots/${slotId}`), (slot) => {
       if (!slot || slot.occupied || slot.reserved) return;
-      return {
-        ...slot,
-        reserved: true,
-        reservedBy: currentUser.uid,
-        reservedUntil: expireAt,
-        currentReservation: reservationId,
-        status: "RESERVED",
-        lastUpdate: now,
-      };
+      return { ...slot, reserved: true, reservedBy: currentUser.uid, reservedUntil: expireAt, currentReservation: reservationId, status: "RESERVED", lastUpdate: now };
     });
     if (!result.committed) throw new Error("الموقف لم يعد متاحاً");
     await set(ref(db, `reservations/${reservationId}`), {
-      reservationId,
-      userId: currentUser.uid,
-      slotId,
-      status: "ACTIVE",
-      paymentStatus: "PENDING",
-      price: 0,
-      hours: minutes / 60,
-      startTime: now,
-      expireTime: expireAt,
-      createdAt: now,
+      reservationId, userId: currentUser.uid, slotId, status: "ACTIVE", paymentStatus: "PENDING",
+      price: 0, hours: minutes / 60, startTime: now, expireTime: expireAt, createdAt: now,
       otp: { code: otpCode, active: true, used: false, expireAt },
     });
-    await set(ref(db, `liveAccess/ACC_${reservationId}`), {
-      otp: otpCode,
-      reservationId,
-      userId: currentUser.uid,
-      slotId,
-      active: true,
-      used: false,
-      expireAt,
-      accessType: "RESERVATION",
-      createdAt: now,
-    });
-    // Also write to liveAccess/entry for ESP32 simulator / firmware
     await set(ref(db, "liveAccess/entry"), {
-      otp: otpCode,
-      reservationId,
-      userId: currentUser.uid,
-      slotId,
-      active: true,
-      used: false,
-      expireAt,
-      accessType: "RESERVATION",
-      createdAt: now,
+      otp: otpCode, reservationId, userId: currentUser.uid, slotId,
+      active: true, used: false, expireAt, accessType: "RESERVATION", createdAt: now,
     });
-    showStatus(
-      reserveStatus,
-      `✅ تم حجز ${slotId}! رقم الحجز: ${reservationId.slice(-8)}`,
-    );
+    msg(`✅ تم حجز ${slotId}! توجه إلى البوابة واقرأ الكود من شاشة LCD`, "ok");
     refreshUserReservation();
   } catch (err) {
-    showStatus(reserveStatus, err.message, true);
+    msg(err.message, "err");
   }
 }
 
-async function cancelReservation() {
-  if (!currentReservation || !currentUser) {
-    showStatus(reserveStatus, "لا يوجد حجز نشط", true);
-    return;
-  }
-  const { reservationId, slotId } = currentReservation;
+async function cancelReservationFor(slotId, reservationId) {
+  if (!currentUser) { msg("الرجاء تسجيل الدخول", "err"); return; }
   try {
     await update(ref(db), {
       [`slots/${slotId}/reserved`]: false,
@@ -230,148 +145,154 @@ async function cancelReservation() {
       [`slots/${slotId}/status`]: "EMPTY",
       [`reservations/${reservationId}/status`]: "CANCELLED",
       [`reservations/${reservationId}/otp/active`]: false,
-      [`liveAccess/ACC_${reservationId}/active`]: false,
       "liveAccess/entry/active": false,
       "liveAccess/entry/otp": "",
       "liveAccess/entry/used": true,
     });
-    showStatus(reserveStatus, "تم إلغاء الحجز");
-    currentReservation = null;
+    msg("تم إلغاء الحجز", "info");
+    if (currentReservation?.reservationId === reservationId) {
+      currentReservation = null;
+    }
     refreshUserReservation();
-  } catch (err) {
-    showStatus(reserveStatus, err.message, true);
-  }
+  } catch (err) { msg(err.message, "err"); }
+}
+
+async function cancelReservation() {
+  if (!currentReservation || !currentUser) { msg("لا يوجد حجز نشط", "err"); return; }
+  await cancelReservationFor(currentReservation.slotId, currentReservation.reservationId);
 }
 
 async function submitGateOTP() {
-  const otp = gateOtpInput.value.trim();
-  if (!otp || !/^\d{4,6}$/.test(otp)) {
-    showStatus(gateStatusMsg, "أدخل كود صحيح من 4-6 أرقام", true);
-    return;
-  }
-  if (!currentUser) {
-    showStatus(gateStatusMsg, "الرجاء تسجيل الدخول", true);
-    return;
-  }
+  const otp = $("gateOtpInput")?.value.trim();
+  if (!otp || !/^\d{4,6}$/.test(otp)) { showStatus(gateStatusMsg, "أدخل الكود الصحيح من 4 أرقام", true); return; }
+  if (!currentUser) { showStatus(gateStatusMsg, "الرجاء تسجيل الدخول", true); return; }
+  if (!currentReservation) { showStatus(gateStatusMsg, "ليس لديك حجز نشط", true); return; }
+
   const requestId = `REQ_${Date.now()}_${currentUser.uid.slice(-6)}`;
   try {
-    await set(ref(db, `commands/gateRequests/${requestId}`), {
-      otp,
-      userId: currentUser.uid,
-      status: "pending",
-      createdAt: Date.now(),
+    await set(ref(db, "commands/gateOpenRequest"), {
+      requestId, otp, userId: currentUser.uid, slotId: currentReservation.slotId,
+      status: "pending", message: "", createdAt: Date.now(),
     });
-    // Also write to path that ESP32 reads from
-    await set(ref(db, "commands/enteredOTP"), otp);
-    await set(ref(db, "commands/lastGateResponse"), "pending");
-    showStatus(gateStatusMsg, "تم إرسال الطلب، انتظر فتح البوابة...");
-    gateOtpInput.value = "";
-    // Listen for ESP32 response
-    const respRef = ref(db, "commands/lastGateResponse");
-    const unsubscribe = onValue(respRef, (snap) => {
+    await set(ref(db, `commands/gateRequests/${requestId}`), {
+      otp, userId: currentUser.uid, status: "pending", createdAt: Date.now(), message: "",
+    });
+    showStatus(gateStatusMsg, "⏳ جارٍ التحقق من الكود...");
+    submitOtpBtn.disabled = true;
+    submitOtpBtn.innerHTML = `<span class="spinner"></span> جاري التحقق...`;
+
+    $("gateOtpInput").value = "";
+
+    if (gateRespUnsubscribe) gateRespUnsubscribe();
+    const respRef = ref(db, "commands/gateOpenRequest/status");
+    const timeout = setTimeout(() => {
+      gateRespUnsubscribe?.();
+      showStatus(gateStatusMsg, "⏱️ لم يتم اكتشاف سيارة خلال 20 ثانية", true);
+      resetOtpBtn();
+    }, 20000);
+
+    gateRespUnsubscribe = onValue(respRef, (snap) => {
       const val = snap.val();
+      if (val === "pending" || val === "processing" || val === "idle") return;
+      clearTimeout(timeout);
+      gateRespUnsubscribe?.();
       if (val === "granted") {
-        showStatus(gateStatusMsg, "✅ تم فتح البوابة، ادخل الآن");
-        unsubscribe();
-      } else if (val !== "pending" && val !== "") {
-        showStatus(gateStatusMsg, `❌ رفض: ${val}`, true);
-        unsubscribe();
+        showStatus(gateStatusMsg, "✅ تم فتح البوابة، ادخل الآن!");
+        update(ref(db), {
+          "liveAccess/entry/active": false, "liveAccess/entry/used": true, "liveAccess/entry/otp": "",
+        });
+        msg("تم فتح البوابة! الكود ملغي", "ok");
+      } else if (val === "denied") {
+        get(ref(db, "commands/gateOpenRequest/message")).then(s => {
+          showStatus(gateStatusMsg, `❌ ${s.val() || "رُفض الطلب"}`, true);
+        });
       }
+      resetOtpBtn();
     });
   } catch (err) {
     showStatus(gateStatusMsg, err.message, true);
+    resetOtpBtn();
   }
 }
 
 function renderSlots(slots) {
   if (!slots) return;
-  let occupied = 0,
-    available = 0;
-  slotsGrid.innerHTML = "";
-  for (let [id, slot] of Object.entries(slots)) {
-    const isOccupied = slot.occupied === true;
-    const isReserved = slot.reserved === true;
-    if (isOccupied) occupied++;
-    else if (!isReserved) available++;
+  let occ = 0, avail = 0;
+  const grid = $("slotsGrid");
+  grid.innerHTML = "";
+  for (const [id, slot] of Object.entries(slots)) {
+    const isOcc = slot.occupied === true;
+    const isRes = slot.reserved === true;
+    const isMyRes = isRes && slot.reservedBy === currentUser?.uid && slot.currentReservation;
+    if (isOcc) occ++; else if (!isRes) avail++;
+
     const div = document.createElement("div");
-    div.className = `slot ${isOccupied ? "occupied" : isReserved ? "reserved" : "free"}`;
-    div.innerHTML = `<div class="slot-id">${id}</div><div class="slot-status">${isOccupied ? "مشغول" : isReserved ? "محجوز" : "متاح"}</div>`;
-    if (!isOccupied && !isReserved)
-      div.onclick = () => {
-        slotSelect.value = id;
-        createReservation();
+    div.className = `slot ${isOcc ? "occ" : isMyRes ? "mine" : isRes ? "res" : "free"}`;
+
+    div.innerHTML = `
+      <div class="slot-id">${id}</div>
+      <div class="slot-icon">${isOcc ? "🚗" : isMyRes ? "🔑" : isRes ? "📌" : "⬜"}</div>
+      <div class="slot-status">${isOcc ? "مشغول" : isMyRes ? "حجزي" : isRes ? "محجوز" : "متاح"}</div>
+      ${isMyRes ? '<button class="slot-cancel-btn" title="إلغاء الحجز">✕</button>' : ''}
+    `;
+
+    if (isMyRes) {
+      const cancelBtn = div.querySelector(".slot-cancel-btn");
+      cancelBtn.onclick = (e) => {
+        e.stopPropagation();
+        cancelReservationFor(id, slot.currentReservation);
       };
-    slotsGrid.appendChild(div);
+    } else if (!isOcc && !isRes) {
+      div.onclick = () => { $("slotSelect").value = id; createReservation(); };
+    }
+
+    grid.appendChild(div);
   }
-  availableCount.innerText = available;
-  occupiedCount.innerText = occupied;
-  const currentVal = slotSelect.value;
-  slotSelect.innerHTML = '<option value="">اختر الموقف</option>';
-  for (let [id, slot] of Object.entries(slots)) {
+  $("availableCount").textContent = avail;
+  $("occupiedCount").textContent = occ;
+  const cur = $("slotSelect").value;
+  $("slotSelect").innerHTML = '<option value="">اختر موقف</option>';
+  for (const [id, slot] of Object.entries(slots))
     if (!slot.occupied && !slot.reserved)
-      slotSelect.innerHTML += `<option value="${id}">${id}</option>`;
-  }
-  if (currentVal && slotSelect.querySelector(`option[value="${currentVal}"]`))
-    slotSelect.value = currentVal;
+      $("slotSelect").innerHTML += `<option value="${id}">${id}</option>`;
+  if (cur && $("slotSelect").querySelector(`option[value="${cur}"]`)) $("slotSelect").value = cur;
 }
 
-// Real-time listeners
-onValue(ref(db, "slots"), (snap) => {
-  if (snap.exists()) renderSlots(snap.val());
-});
-onValue(ref(db, "parking"), (snap) => {
+onValue(ref(db, "slots"), snap => { if (snap.exists()) renderSlots(snap.val()); });
+onValue(ref(db, "parking"), snap => {
   if (snap.exists()) {
-    availableCount.innerText = snap.val().available || 0;
-    occupiedCount.innerText = snap.val().occupied || 0;
+    $("availableCount").textContent = snap.val().available || 0;
+    $("occupiedCount").textContent = snap.val().occupied || 0;
   }
 });
-onValue(ref(db, "system"), (snap) => {
-  if (snap.exists()) {
-    const sys = snap.val();
-    const now = Date.now();
-    const lastBeat = sys.lastHeartbeat || 0;
-    const isOnline = lastBeat > 0 && now - lastBeat < 15000;
-    espStatus.innerHTML = isOnline
-      ? '<span style="color:#22c55e">🟢 متصل</span>'
-      : '<span style="color:#ef4444">🔴 غير متصل</span>';
-    wifiStatus.innerHTML = sys.wifi ? "🟢 متصل" : "🔴 مقطوع";
-    systemLog.innerText = `آخر نبضة قلب: ${lastBeat ? new Date(lastBeat).toLocaleTimeString() : "--"} | الذاكرة الحرة: ${sys.freeHeap || "?"} بايت`;
-  } else {
-    espStatus.innerHTML = '<span style="color:#ef4444">🔴 غير متصل</span>';
-    wifiStatus.innerHTML = "🔴 مقطوع";
-  }
+onValue(ref(db, "system"), snap => {
+  const sys = snap.val();
+  const online = sys?.esp32Online === true;
+  $("espStatus").innerHTML = online
+    ? '<span class="dot dot-green"></span> متصل'
+    : '<span class="dot dot-red"></span> غير متصل';
+  $("wifiStatus").innerHTML = sys?.wifi ? "🟢 متصل" : "🔴 مقطوع";
 });
-onValue(ref(db, "gates"), (snap) => {
-  if (snap.exists())
-    gateEntryStatus.innerText = snap.val().entry?.open ? "مفتوحة" : "مغلقة";
+onValue(ref(db, "gates"), snap => {
+  $("gateEntryStatus").innerHTML = snap.val()?.entry?.open
+    ? '<span class="dot dot-green"></span> مفتوحة'
+    : '<span class="dot dot-red"></span> مغلقة';
 });
 onValue(ref(db, "reservations"), () => refreshUserReservation());
 onValue(ref(db, "liveAccess"), () => refreshUserReservation());
 
-// Auth
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "../index.html";
-    return;
-  }
+  if (!user) { window.location.href = "../index.html"; return; }
   currentUser = user;
-  userEmailSpan.innerText = user.email;
+  $("userEmail").textContent = user.email;
   const roleSnap = await get(ref(db, `users/${user.uid}/role`));
   if (!roleSnap.exists())
-    await set(ref(db, `users/${user.uid}`), {
-      email: user.email,
-      role: "user",
-      createdAt: Date.now(),
-      active: true,
-      wallet: 0,
-    });
+    await set(ref(db, `users/${user.uid}`), { email: user.email, role: "user", createdAt: Date.now(), active: true, wallet: 0 });
   refreshUserReservation();
 });
 
-createReservationBtn.onclick = createReservation;
-cancelReservationBtn.onclick = cancelReservation;
-submitOtpBtn.onclick = submitGateOTP;
-document.getElementById("logoutBtn").onclick = async () => {
-  await signOut(auth);
-  window.location.href = "../index.html";
-};
+$("createReservationBtn").onclick = createReservation;
+$("cancelReservationBtn").onclick = cancelReservation;
+$("submitOtpBtn").onclick = submitGateOTP;
+$("gateOtpInput").onkeydown = e => { if (e.key === "Enter") submitGateOTP(); };
+document.getElementById("logoutBtn").onclick = async () => { await signOut(auth); window.location.href = "../index.html"; };
