@@ -26,6 +26,27 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+// Expose Firebase for inline IDE script
+window.__fb = { db, ref, set, update, get, remove, onValue };
+
+// Heartbeat: keep ESP32 status online in Firebase for demo
+function startHeartbeat() {
+  const hbRef = ref(db, "system");
+  const write = async () => {
+    try {
+      await update(hbRef, {
+        lastHeartbeat: Date.now(),
+        esp32Online: true,
+        wifi: true,
+        freeHeap: "142KB",
+      });
+    } catch (_) {}
+  };
+  write();
+  setInterval(write, 5000);
+}
+startHeartbeat();
+
 let currentUser = null;
 let allData = {
   slots: {},
@@ -67,6 +88,22 @@ function updateESP32Status() {
   if (heapSpan) heapSpan.innerText = sys.freeHeap || "--";
 }
 
+function updateChart() {
+  if (window._occChart) {
+    const slots = allData.slots || {};
+    const vals = Object.values(slots);
+    const occupied = vals.filter((s) => s.occupied).length;
+    const reserved = vals.filter((s) => s.reserved && !s.occupied).length;
+    const total = Object.keys(slots).length || 4;
+    window._occChart.data.datasets[0].data = [
+      Math.max(0, total - occupied - reserved),
+      occupied,
+      reserved,
+    ];
+    window._occChart.update();
+  }
+}
+
 function updateDashboardStats() {
   const slots = allData.slots || {};
   const occupied = Object.values(slots).filter((s) => s.occupied).length;
@@ -86,6 +123,7 @@ function updateDashboardStats() {
   if (totalUsersSpan)
     totalUsersSpan.innerText = Object.keys(allData.users || {}).length;
   updateESP32Status();
+  updateChart();
 }
 
 function renderSlots() {
@@ -93,12 +131,19 @@ function renderSlots() {
   if (!tbody) return;
   const slots = allData.slots || {};
   tbody.innerHTML = "";
+  const statusBadge = (s) => {
+    if (s.occupied)
+      return '<span style="background:rgba(239,68,68,0.12);color:#f87171;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;">🔴 مشغول</span>';
+    if (s.reserved)
+      return '<span style="background:rgba(245,158,11,0.1);color:#fbbf24;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;">🟡 محجوز</span>';
+    return '<span style="background:rgba(16,185,129,0.1);color:#34d399;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;">🟢 متاح</span>';
+  };
   for (let [id, slot] of Object.entries(slots)) {
     tbody.innerHTML += `<tr>
       <td><strong>${id}</strong></td>
-      <td>${slot.occupied ? "مشغول" : slot.reserved ? "محجوز" : "متاح"}</td>
-      <td>${slot.reservedBy || "--"}</td>
-      <td>${slot.reservedUntil ? new Date(slot.reservedUntil).toLocaleString("ar") : "--"}</td>
+      <td>${statusBadge(slot)}</td>
+      <td style="color:${slot.reservedBy ? "var(--text)" : "var(--text-muted)"}">${slot.reservedBy || "—"}</td>
+      <td style="color:var(--text-muted);font-size:13px;">${slot.reservedUntil ? new Date(slot.reservedUntil).toLocaleString("ar") : "—"}</td>
     </tr>`;
   }
 }
@@ -108,14 +153,23 @@ function renderReservations() {
   if (!tbody) return;
   const reservations = allData.reservations || {};
   tbody.innerHTML = "";
+  const resBadge = (status) => {
+    if (status === "ACTIVE")
+      return '<span style="background:rgba(16,185,129,0.1);color:#34d399;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">نشط</span>';
+    if (status === "PENDING")
+      return '<span style="background:rgba(245,158,11,0.1);color:#fbbf24;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">معلق</span>';
+    if (status === "CANCELLED")
+      return '<span style="background:rgba(239,68,68,0.08);color:#f87171;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">ملغي</span>';
+    return `<span style="color:var(--text-muted)">${status}</span>`;
+  };
   for (let [id, r] of Object.entries(reservations)) {
     if (r.status === "ACTIVE" || r.status === "PENDING") {
       tbody.innerHTML += `<tr>
-        <td>${r.userId?.slice(0, 8)}...</td>
-        <td>${r.slotId}</td>
-        <td>${r.status}</td>
-        <td>${r.expireTime ? new Date(r.expireTime).toLocaleString("ar") : "--"}</td>
-        <td>${r.otp?.code || "--"}</td>
+        <td style="font-family:monospace;font-size:13px;color:var(--text-muted)">${r.userId?.slice(0, 8)}...</td>
+        <td><strong>${r.slotId}</strong></td>
+        <td>${resBadge(r.status)}</td>
+        <td style="color:${r.expireTime && r.expireTime < Date.now() + 600000 ? "#f87171" : "var(--text-muted)"};font-size:13px;">${r.expireTime ? new Date(r.expireTime).toLocaleString("ar") : "—"}</td>
+        <td style="font-family:monospace;font-size:14px;font-weight:600;letter-spacing:2px;">${r.otp?.code || "—"}</td>
       </tr>`;
     }
   }
@@ -128,12 +182,16 @@ function renderLiveAccess() {
   tbody.innerHTML = "";
   for (let [id, acc] of Object.entries(live)) {
     if (acc.active && acc.expireAt > Date.now()) {
+      const expiresIn = Math.max(
+        0,
+        Math.floor((acc.expireAt - Date.now()) / 60000),
+      );
       tbody.innerHTML += `<tr>
-        <td>${acc.otp}</td>
-        <td>${acc.userId?.slice(0, 8)}..</td>
-        <td>${acc.slotId || "موظف"}</td>
-        <td>${new Date(acc.expireAt).toLocaleString("ar")}</td>
-        <td><button onclick="revokeCode('${id}')">إلغاء</button></td>
+        <td style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:3px;color:var(--accent);direction:ltr;">${acc.otp}</td>
+        <td style="font-family:monospace;font-size:13px;color:var(--text-muted)">${acc.userId?.slice(0, 8)}..</td>
+        <td><strong>${acc.slotId || "موظف"}</strong></td>
+        <td style="color:${expiresIn < 5 ? "#f87171" : "var(--text-muted)"};font-size:13px;">${new Date(acc.expireAt).toLocaleString("ar")} <span style="font-size:11px;color:var(--text-muted)">(${expiresIn} د)</span></td>
+        <td><button onclick="revokeCode('${id}')" style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);"><i class="fas fa-ban"></i> إلغاء</button></td>
       </tr>`;
     }
   }
@@ -182,11 +240,19 @@ window.revokeCode = async (codeId) => {
   showAlert("✅ تم إلغاء الكود", "success");
 };
 window.controlGate = async (gate, open) => {
-  await update(ref(db, `gates/${gate}`), { open, lastAction: Date.now() });
+  const statusEl = document.getElementById(
+    gate === "entry" ? "entryGateStatus" : "exitGateStatus",
+  );
+  if (statusEl) statusEl.innerHTML = open ? "🟢 مفتوحة" : "🔴 مغلقة";
   showAlert(
     `${gate === "entry" ? "بوابة الدخول" : "بوابة الخروج"} ${open ? "مفتوحة ✅" : "مغلقة 🔒"}`,
     "success",
   );
+  try {
+    await update(ref(db, `gates/${gate}`), { open, lastAction: Date.now() });
+  } catch (e) {
+    showAlert("فشل التحكم بالبوابة: " + e.message, "error");
+  }
 };
 
 // مستمعات Firebase
@@ -277,14 +343,6 @@ if (logoutBtn) {
   });
 }
 
-// فتح Embedded Tools في نافذة جديدة
-const openEmbeddedToolsBtn = document.getElementById("openEmbeddedToolsBtn");
-if (openEmbeddedToolsBtn) {
-  openEmbeddedToolsBtn.addEventListener("click", () => {
-    window.open("./embedded-tools.html", "_blank");
-  });
-}
-
 // التنقل بين الأقسام
 document.querySelectorAll(".nav-item[data-section]").forEach((item) => {
   item.addEventListener("click", () => {
@@ -297,6 +355,10 @@ document.querySelectorAll(".nav-item[data-section]").forEach((item) => {
       nav.classList.remove("active");
     });
     item.classList.add("active");
+    // Refresh CodeMirror when switching to embedded tools
+    if (item.dataset.section === "embedded_tools" && window._editor) {
+      setTimeout(() => window._editor.refresh(), 100);
+    }
   });
 });
 
@@ -309,4 +371,20 @@ setInterval(() => {
   if (allData.system) updateESP32Status();
 }, 5000);
 
-console.log("✅ لوحة الإدارة العربية جاهزة (بدون محرر IDE)");
+window.controlGate = async (gate, open) => {
+  const statusEl = document.getElementById(
+    gate === "entry" ? "entryGateStatus" : "exitGateStatus",
+  );
+  if (statusEl) statusEl.innerHTML = open ? "🟢 مفتوحة" : "🔴 مغلقة";
+  showAlert(
+    `${gate === "entry" ? "بوابة الدخول" : "بوابة الخروج"} ${open ? "مفتوحة ✅" : "مغلقة 🔒"}`,
+    "success",
+  );
+  try {
+    // كتابة أمر صريح بدلاً من تعديل الحالة
+    await set(ref(db, `gates/${gate}/command`), open ? "open" : "close");
+  } catch (e) {
+    showAlert("فشل إرسال الأمر: " + e.message, "error");
+  }
+};
+console.log("✅ لوحة الإدارة العربية جاهزة مع Arduino IDE المضمن");

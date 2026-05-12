@@ -57,7 +57,7 @@ signupBtn.onclick = async () => {
   }
 
   signupBtn.disabled = true;
-  signupBtn.textContent = "جاري إنشاء الحساب...";
+  signupBtn.classList.add('loading');
 
   try {
     // 1. إنشاء المستخدم في Firebase Authentication
@@ -100,6 +100,6 @@ signupBtn.onclick = async () => {
       errorMsg = "كلمة المرور ضعيفة (6 أحرف على الأقل)";
     showStatus("❌ " + errorMsg, true);
     signupBtn.disabled = false;
-    signupBtn.textContent = "إنشاء حساب";
+    signupBtn.classList.remove('loading');
   }
 };

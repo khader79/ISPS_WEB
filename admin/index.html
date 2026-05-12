@@ -1,224 +1,3439 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>لوحة التحكم - موقف سمارت</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", sans-serif; }
-    body { background: #0a0f1e; color: #eef2ff; overflow-x: hidden; }
-    .sidebar {
-      width: 280px;
-      background: linear-gradient(180deg, #0f172a 0%, #0a0f1e 100%);
-      border-left: 1px solid rgba(59, 130, 246, 0.2);
-      padding: 30px 20px;
-      position: fixed;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      overflow-y: auto;
-      z-index: 100;
-      backdrop-filter: blur(10px);
-      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
-    }
-    .sidebar h2 {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 35px;
-      background: linear-gradient(135deg, #60a5fa, #a78bfa);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 18px;
-      border-radius: 16px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      color: #cbd5e1;
-      font-weight: 500;
-    }
-    .nav-item i { width: 24px; font-size: 1.2rem; }
-    .nav-item:hover, .nav-item.active {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      transform: translateX(-4px);
-    }
-    .main {
-      flex: 1;
-      margin-right: 280px;
-      padding: 30px;
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 24px;
-      margin-bottom: 40px;
-    }
-    .stat-card {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      border-radius: 28px;
-      padding: 22px;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 25px -8px rgba(0, 0, 0, 0.5);
-      border-color: #3b82f6;
-    }
-    .stat-card .label {
-      color: #94a3b8;
-      font-size: 14px;
-      letter-spacing: 0.05em;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .stat-card .value {
-      font-size: 38px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .panel {
-      background: #1e293b;
-      border-radius: 28px;
-      padding: 24px;
-      margin-bottom: 30px;
-      border: 1px solid #334155;
-      transition: all 0.2s;
-    }
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 15px;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 12px;
-    }
-    .panel-header h3 {
-      font-size: 1.3rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .table-container { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 14px 12px; text-align: right; border-bottom: 1px solid #334155; }
-    th { color: #94a3b8; font-weight: 600; font-size: 0.85rem; }
-    button {
-      background: #3b82f6;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 40px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    button:hover { background: #2563eb; transform: translateY(-2px); }
-    button.danger { background: #ef4444; }
-    button.danger:hover { background: #dc2626; }
-    button.success { background: #10b981; }
-    button.outline { background: transparent; border: 1px solid #3b82f6; color: #3b82f6; }
-    select, input {
-      background: #0f172a;
-      border: 1px solid #334155;
-      padding: 8px 14px;
-      border-radius: 20px;
-      color: white;
-      font-size: 0.9rem;
-    }
-    .badge-online { color: #10b981; font-weight: bold; }
-    .badge-offline { color: #ef4444; font-weight: bold; }
-    .section { display: none; }
-    .section.active { display: block; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(100%); transition: 0.3s; }
-      .sidebar.open { transform: translateX(0); }
-      .main { margin-right: 0; }
-      .stats-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-<div class="app">
-  <div class="sidebar">
-    <h2><i class="fas fa-parking"></i> موقف سمارت</h2>
-    <div class="nav-item active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</div>
-    <div class="nav-item" data-section="slots"><i class="fas fa-square"></i> المواقف</div>
-    <div class="nav-item" data-section="reservations"><i class="fas fa-calendar-check"></i> الحجوزات</div>
-    <div class="nav-item" data-section="liveAccess"><i class="fas fa-key"></i> الأكواد النشطة</div>
-    <div class="nav-item" data-section="users"><i class="fas fa-users"></i> المستخدمون</div>
-    <div class="nav-item" data-section="gates"><i class="fas fa-door-open"></i> البوابات</div>
-    <div class="nav-item" data-section="system"><i class="fas fa-microchip"></i> النظام</div>
-    <div class="nav-item" data-section="logs"><i class="fas fa-history"></i> السجلات</div>
-    <!-- زر Embedded Tools بدلاً من iframe -->
-    <div class="nav-item" data-section="embedded_tools"><i class="fas fa-microchip"></i> Embedded Tools</div>
-    <div class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</div>
-  </div>
-  <div class="main">
-    <div id="dashboard" class="section active">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="label"><i class="fas fa-parking"></i> الأماكن المتاحة</div><div class="value" id="adminAvailable">0</div></div>
-        <div class="stat-card"><div class="label"><i class="fas fa-car"></i> المشغولة</div><div class="value" id="adminOccupied">0</div></div>
-        <div class="stat-card"><div class="label"><i class="fas fa-bookmark"></i> الحجوزات النشطة</div><div class="value" id="adminActiveRes">0</div></div>
-        <div class="stat-card"><div class="label"><i class="fas fa-user-friends"></i> إجمالي المستخدمين</div><div class="value" id="adminTotalUsers">0</div></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>موقف سمارت | لوحة التحكم</title>
+    <script src="../no-reload.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/display/autorefresh.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #111827;
+        --surface: rgba(30, 41, 59, 0.8);
+        --surface-hover: rgba(35, 48, 68, 0.85);
+        --sidebar-bg: rgba(15, 23, 42, 0.95);
+        --border: rgba(59, 130, 246, 0.08);
+        --border-hover: rgba(59, 130, 246, 0.2);
+        --accent: #3b82f6;
+        --accent-dark: #2563eb;
+        --accent-glow: rgba(59, 130, 246, 0.1);
+        --purple: #8b5cf6;
+        --teal: #14b8a6;
+        --green: #10b981;
+        --green-bg: rgba(16, 185, 129, 0.08);
+        --red: #ef4444;
+        --red-bg: rgba(239, 68, 68, 0.08);
+        --amber: #f59e0b;
+        --amber-bg: rgba(245, 158, 11, 0.08);
+        --text: #f1f5f9;
+        --text-soft: #94a3b8;
+        --text-muted: #64748b;
+        --radius: 20px;
+        --radius-sm: 14px;
+        --radius-xs: 10px;
+        --shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.3);
+        --shadow-xl: 0 24px 72px rgba(0, 0, 0, 0.4);
+        --font: "Cairo", sans-serif;
+        --transition: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* ===== BUTTON BASE ===== */
+      .btn {
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      /* ===== STAT VALUE POP ===== */
+      .stat-card .value.pop {
+        animation: valPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes valPop {
+        0% {
+          transform: scale(1);
+        }
+        30% {
+          transform: scale(1.15);
+        }
+        70% {
+          transform: scale(0.96);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* ===== SIDEBAR HOVER ===== */
+      .nav-item {
+        position: relative;
+        overflow: hidden;
+      }
+      .nav-item::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(59, 130, 246, 0.03),
+          transparent
+        );
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .nav-item:hover::after {
+        opacity: 1;
+      }
+
+      /* ===== MOUSE GLOW ===== */
+      .mouse-glow {
+        position: fixed;
+        pointer-events: none;
+        z-index: 0;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(59, 130, 246, 0.015),
+          transparent 70%
+        );
+        transform: translate(-50%, -50%);
+        transition: transform 0.08s ease-out;
+      }
+
+      body {
+        background: var(--bg);
+        background-image:
+          radial-gradient(
+            ellipse at 20% 10%,
+            rgba(59, 130, 246, 0.03) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 80% 90%,
+            rgba(139, 92, 246, 0.02) 0%,
+            transparent 50%
+          );
+        color: var(--text);
+        font-family: var(--font);
+        min-height: 100vh;
+        direction: rtl;
+        display: flex;
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.15);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.25);
+      }
+
+      /* ===== SIDEBAR ===== */
+      .sidebar {
+        width: 280px;
+        min-height: 100vh;
+        background: var(--sidebar-bg);
+        backdrop-filter: blur(24px) saturate(1.3);
+        -webkit-backdrop-filter: blur(24px) saturate(1.3);
+        border-left: 1px solid var(--border);
+        padding: 28px 18px;
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        overflow-y: auto;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 0 8px 32px 8px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 20px;
+      }
+      .sidebar-logo-icon {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--accent), var(--purple));
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #fff;
+        box-shadow: 0 4px 20px var(--accent-glow);
+        flex-shrink: 0;
+      }
+      .sidebar-logo h2 {
+        font-size: 20px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .sidebar-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 16px;
+        border-radius: var(--radius-sm);
+        margin-bottom: 2px;
+        cursor: pointer;
+        transition: all var(--transition);
+        color: var(--text-soft);
+        font-weight: 500;
+        font-size: 14px;
+        position: relative;
+      }
+      .nav-item i {
+        width: 22px;
+        font-size: 1rem;
+        text-align: center;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+      }
+      .nav-item:hover {
+        background: rgba(59, 130, 246, 0.08);
+        color: var(--text);
+      }
+      .nav-item:hover i {
+        transform: scale(1.15);
+      }
+      .nav-item.active {
+        background: linear-gradient(
+          135deg,
+          rgba(59, 130, 246, 0.15),
+          rgba(139, 92, 246, 0.08)
+        );
+        color: #60a5fa;
+        box-shadow: inset 4px 0 0 var(--accent);
+      }
+      .nav-item.active i {
+        color: var(--accent);
+      }
+      .nav-item.active::before {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 40%;
+        background: var(--accent);
+        border-radius: 0 3px 3px 0;
+        filter: blur(4px);
+        opacity: 0.6;
+      }
+
+      .nav-logout {
+        margin-top: auto;
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        color: var(--red);
+      }
+      .nav-logout:hover {
+        background: rgba(239, 68, 68, 0.06) !important;
+        color: #f87171 !important;
+      }
+
+      /* ===== MAIN ===== */
+      .main {
+        flex: 1;
+        margin-right: 280px;
+        padding: 28px 32px;
+        min-height: 100vh;
+      }
+
+      /* ===== SECTION ===== */
+      .section {
+        display: none;
+        animation: fadeIn 0.4s ease;
+      }
+      .section.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .page-header {
+        margin-bottom: 28px;
+      }
+      .page-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .page-header h1 i {
+        color: var(--accent);
+      }
+      .page-header p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-top: 4px;
+      }
+
+      /* ===== STATS GRID ===== */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+      }
+      .stat-card {
+        background: var(--surface);
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        border-radius: var(--radius);
+        padding: 24px;
+        border: 1px solid var(--border);
+        transition: all var(--transition);
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+      .stat-card:nth-child(1)::before {
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+      }
+      .stat-card:nth-child(2)::before {
+        background: linear-gradient(90deg, var(--teal), var(--green));
+      }
+      .stat-card:nth-child(3)::before {
+        background: linear-gradient(90deg, var(--amber), var(--accent));
+      }
+      .stat-card:nth-child(4)::before {
+        background: linear-gradient(90deg, var(--purple), var(--teal));
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--border-hover);
+        box-shadow: 0 16px 56px rgba(0, 0, 0, 0.35);
+      }
+      .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(-5deg);
+      }
+      .stat-card .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin-bottom: 14px;
+        transition: all 0.3s ease;
+      }
+      .stat-card:nth-child(1) .stat-icon {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent);
+      }
+      .stat-card:nth-child(2) .stat-icon {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+      .stat-card:nth-child(3) .stat-icon {
+        background: var(--amber-bg);
+        color: var(--amber);
+      }
+      .stat-card:nth-child(4) .stat-icon {
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--purple);
+      }
+      .stat-card:nth-child(1):hover .stat-icon {
+        background: rgba(59, 130, 246, 0.18);
+      }
+      .stat-card:nth-child(2):hover .stat-icon {
+        background: rgba(16, 185, 129, 0.15);
+      }
+      .stat-card:nth-child(3):hover .stat-icon {
+        background: rgba(245, 158, 11, 0.15);
+      }
+      .stat-card:nth-child(4):hover .stat-icon {
+        background: rgba(139, 92, 246, 0.18);
+      }
+      .stat-card .label {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .stat-card .value {
+        font-size: 36px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--text), #94a3b8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        line-height: 1.1;
+      }
+
+      /* ===== PANEL ===== */
+      .panel {
+        background: var(--surface);
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
+        transition: all var(--transition);
+      }
+      .panel:hover {
+        border-color: var(--border-hover);
+      }
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .panel-header h3 {
+        font-size: 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .panel-header h3 i {
+        color: var(--accent);
+      }
+
+      /* ===== TABLE ===== */
+      .table-container {
+        overflow-x: auto;
+        border-radius: var(--radius-xs);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        padding: 14px 16px;
+        text-align: right;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 12px;
+        border-bottom: 1px solid var(--border);
+        letter-spacing: 0.3px;
+      }
+      td {
+        padding: 14px 16px;
+        text-align: right;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.04);
+        font-size: 14px;
+        transition: background 0.2s ease;
+      }
+      tr {
+        transition: all 0.2s ease;
+      }
+      tr:hover td {
+        background: rgba(59, 130, 246, 0.04);
+      }
+      tr:first-child td {
+        font-weight: 600;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* ===== BUTTONS ===== */
+      button {
+        background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+        border: none;
+        padding: 10px 22px;
+        border-radius: var(--radius-xs);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font);
+      }
+      button:hover {
+        box-shadow: 0 6px 24px var(--accent-glow);
+      }
+      button.danger {
+        background: linear-gradient(135deg, var(--red), #dc2626);
+      }
+      button.danger:hover {
+        box-shadow: 0 6px 24px rgba(239, 68, 68, 0.2);
+      }
+      button.success {
+        background: linear-gradient(135deg, var(--green), #059669);
+      }
+      button.success:hover {
+        box-shadow: 0 6px 24px var(--green-bg);
+      }
+      button.outline {
+        background: transparent;
+        border: 1.5px solid rgba(59, 130, 246, 0.3);
+        color: var(--accent);
+      }
+      button.outline:hover {
+        background: rgba(59, 130, 246, 0.06);
+        border-color: var(--accent);
+      }
+
+      select,
+      input {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1.5px solid var(--border);
+        padding: 10px 16px;
+        border-radius: var(--radius-xs);
+        color: var(--text);
+        font-size: 14px;
+        font-family: var(--font);
+        transition: all 0.25s ease;
+        width: 100%;
+      }
+      select:focus,
+      input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-glow);
+      }
+
+      .badge-online {
+        color: var(--green);
+        font-weight: 600;
+      }
+      .badge-offline {
+        color: var(--red);
+        font-weight: 600;
+      }
+
+      /* ===== GATE CONTROL ===== */
+      .gate-controls {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+      .gate-card {
+        flex: 1;
+        min-width: 200px;
+        background: rgba(0, 0, 0, 0.15);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 24px;
+        text-align: center;
+      }
+      .gate-card h4 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .gate-card .gate-status-display {
+        font-size: 14px;
+        margin-bottom: 16px;
+        padding: 8px 12px;
+        border-radius: var(--radius-xs);
+        background: rgba(0, 0, 0, 0.15);
+      }
+      .gate-card .gate-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      /* ===== SETTINGS ===== */
+      .settings-grid {
+        display: grid;
+        gap: 20px;
+        max-width: 480px;
+      }
+      .settings-grid label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      /* ===== SYSTEM CARD ===== */
+      .sys-monitor {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        text-align: center;
+      }
+      .sys-monitor > div {
+        background: rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 20px 16px;
+        transition: all 0.3s ease;
+      }
+      .sys-monitor > div:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-3px);
+      }
+      .sys-monitor .sys-mon-icon {
+        font-size: 28px;
+        display: block;
+        margin-bottom: 10px;
+      }
+      .sys-monitor .sys-mon-label {
+        display: block;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+      .sys-monitor .sys-mon-value {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      /* ===== ARDUINO IDE ===== */
+      .ide-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        height: calc(100vh - 160px);
+        min-height: 500px;
+      }
+      .ide-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 10px 16px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .ide-toolbar .toolbar-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ide-toolbar .toolbar-divider {
+        width: 1px;
+        height: 28px;
+        background: var(--border);
+        margin: 0 6px;
+      }
+      .ide-toolbar select {
+        width: auto;
+        min-width: 120px;
+        padding: 6px 10px;
+        font-size: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 6px;
+      }
+      .ide-toolbar .tb-btn {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        color: var(--text-soft);
+        transition: all 0.2s ease;
+      }
+      .ide-toolbar .tb-btn:hover {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--text);
+        border-color: rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
+      }
+      .ide-toolbar .tb-btn.verify {
+        color: var(--amber);
+      }
+      .ide-toolbar .tb-btn.verify:hover {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.2);
+      }
+      .ide-toolbar .tb-btn.upload {
+        color: var(--green);
+      }
+      .ide-toolbar .tb-btn.upload:hover {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.2);
+      }
+      .ide-toolbar .tb-btn.danger-action {
+        color: var(--red);
+      }
+      .ide-toolbar .tb-btn.danger-action:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.2);
+      }
+      .ide-toolbar .tb-btn.active-action {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border-color: rgba(59, 130, 246, 0.3);
+      }
+
+      .ide-main {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+      }
+
+      .ide-sidebar {
+        width: 200px;
+        min-width: 200px;
+        background: rgba(0, 0, 0, 0.15);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .ide-sidebar-header {
+        padding: 10px 14px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .ide-sidebar-header button {
+        padding: 3px 8px;
+        font-size: 10px;
+        border-radius: 4px;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent);
+      }
+      .ide-sidebar-header button:hover {
+        background: rgba(59, 130, 246, 0.2);
+      }
+      .ide-file-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px 0;
+      }
+      .ide-file-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 14px;
+        font-size: 12px;
+        color: var(--text-soft);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border-right: 2px solid transparent;
+      }
+      .ide-file-item:hover {
+        background: rgba(59, 130, 246, 0.04);
+        color: var(--text);
+      }
+      .ide-file-item.active {
+        background: rgba(59, 130, 246, 0.08);
+        color: var(--text);
+        border-right-color: var(--accent);
+      }
+      .ide-file-item .file-icon {
+        font-size: 14px;
+        width: 18px;
+        text-align: center;
+      }
+      .ide-file-item .file-close {
+        margin-right: auto;
+        opacity: 0;
+        transition: opacity 0.15s;
+        font-size: 10px;
+        color: var(--text-muted);
+        cursor: pointer;
+      }
+      .ide-file-item:hover .file-close {
+        opacity: 1;
+      }
+      .ide-file-item .file-close:hover {
+        color: var(--red);
+      }
+
+      .ide-editor-wrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .ide-editor-tabs {
+        display: flex;
+        background: rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+      }
+      .ide-editor-tab {
+        padding: 8px 16px;
+        font-size: 12px;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ide-editor-tab:hover {
+        color: var(--text-soft);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .ide-editor-tab.active {
+        color: var(--text);
+        border-bottom-color: var(--accent);
+        background: rgba(59, 130, 246, 0.04);
+      }
+      .ide-editor-tab .tab-close {
+        font-size: 10px;
+        opacity: 0;
+        cursor: pointer;
+        padding: 0 2px;
+        border-radius: 3px;
+      }
+      .ide-editor-tab:hover .tab-close {
+        opacity: 0.6;
+      }
+      .ide-editor-tab .tab-close:hover {
+        opacity: 1;
+        color: var(--red);
+        background: rgba(239, 68, 68, 0.1);
+      }
+      .CodeMirror {
+        height: 100% !important;
+        font-size: 13px;
+        font-family: "Consolas", "Courier New", monospace;
+        direction: ltr;
+      }
+      .CodeMirror-gutters {
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.15);
+      }
+
+      .ide-bottom {
+        display: flex;
+        flex-direction: column;
+      }
+      .ide-console-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 14px;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid var(--border);
+        cursor: pointer;
+      }
+      .ide-console-header .con-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ide-console-header .con-actions {
+        display: flex;
+        gap: 4px;
+      }
+      .ide-console-header .con-actions button {
+        padding: 2px 8px;
+        font-size: 10px;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text-muted);
+        min-width: auto;
+      }
+      .ide-console-header .con-actions button:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+      }
+      .ide-console-body {
+        background: rgba(0, 0, 0, 0.25);
+        border-top: 1px solid var(--border);
+        max-height: 140px;
+        overflow-y: auto;
+        font-family: "Consolas", monospace;
+        font-size: 12px;
+        direction: ltr;
+        text-align: left;
+        padding: 8px;
+      }
+      .ide-console-body .log-line {
+        padding: 1px 0;
+        color: #94a3b8;
+        word-break: break-all;
+      }
+      .ide-console-body .log-line.info {
+        color: #60a5fa;
+      }
+      .ide-console-body .log-line.success {
+        color: #34d399;
+      }
+      .ide-console-body .log-line.warn {
+        color: #fbbf24;
+      }
+      .ide-console-body .log-line.error {
+        color: #f87171;
+      }
+      .ide-console-body .log-line.send {
+        color: #c084fc;
+      }
+      .ide-console-body .log-line.system {
+        color: #64748b;
+        font-style: italic;
+      }
+      .ide-console-input-row {
+        display: flex;
+        gap: 6px;
+        padding: 6px 8px;
+        background: rgba(0, 0, 0, 0.15);
+        border-top: 1px solid var(--border);
+      }
+      .ide-console-input-row input {
+        flex: 1;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-family: "Consolas", monospace;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text);
+        min-width: 0;
+      }
+      .ide-console-input-row input:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
+      .ide-console-input-row button {
+        padding: 5px 14px;
+        font-size: 11px;
+        border-radius: 4px;
+        background: var(--accent);
+        color: #fff;
+        min-width: auto;
+      }
+
+      /* ===== EXAMPLE BROWSER ===== */
+      .ide-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+      }
+      .ide-modal-overlay.open {
+        display: flex;
+      }
+      .ide-modal {
+        background: var(--surface);
+        backdrop-filter: blur(24px) saturate(1.3);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        width: 90%;
+        max-width: 700px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        animation: fadeIn 0.3s ease;
+      }
+      .ide-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .ide-modal-header h2 {
+        font-size: 20px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ide-modal-header h2 i {
+        color: var(--accent);
+      }
+      .ide-modal-header .close-modal {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 0;
+        min-width: auto;
+      }
+      .ide-modal-header .close-modal:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--red);
+      }
+      .ide-modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 24px 24px;
+      }
+      .example-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+      }
+      .example-card {
+        background: rgba(0, 0, 0, 0.12);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xs);
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .example-card:hover {
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateY(-2px);
+        background: rgba(59, 130, 246, 0.04);
+      }
+      .example-card .ex-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+        display: block;
+      }
+      .example-card h4 {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .example-card p {
+        font-size: 11px;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      /* ===== TEMPLATES MODAL ===== */
+      .template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 10px;
+      }
+      .template-card {
+        background: rgba(0, 0, 0, 0.12);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xs);
+        padding: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+      }
+      .template-card:hover {
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateY(-2px);
+        background: rgba(59, 130, 246, 0.04);
+      }
+      .template-card .tmpl-icon {
+        font-size: 24px;
+        margin-bottom: 6px;
+      }
+      .template-card h4 {
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      /* ===== PINOUT VIEWER ===== */
+      .pinout-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .pinout-col h4 {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pinout-col h4 i {
+        color: var(--accent);
+      }
+      .pinout-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px;
+      }
+      .pinout-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+      .pinout-item .pin-num {
+        font-weight: 700;
+        color: var(--accent);
+        min-width: 24px;
+        text-align: center;
+      }
+      .pinout-item .pin-func {
+        color: var(--text-soft);
+      }
+
+      /* ===== RESPONSIVE IDE ===== */
+      @media (max-width: 900px) {
+        .ide-sidebar {
+          display: none;
+        }
+        .ide-toolbar .toolbar-group.hide-mobile {
+          display: none;
+        }
+        .ide-toolbar select {
+          min-width: 90px;
+          font-size: 11px;
+        }
+        .CodeMirror {
+          font-size: 12px;
+        }
+        .pinout-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 900px) {
+        #mobileMenuToggle {
+          display: flex !important;
+        }
+        .sidebar {
+          transform: translateX(100%);
+          transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          width: 280px;
+          box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        #sidebarOverlay.open {
+          display: block !important;
+        }
+        .main {
+          margin-right: 0;
+          padding: 20px;
+          margin-top: 50px;
+        }
+        .stats-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+        .main {
+          padding: 16px;
+        }
+        .panel {
+          padding: 18px;
+        }
+        .gate-controls {
+          flex-direction: column;
+        }
+        .sys-monitor {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="fas fa-parking"></i></div>
+        <h2>موقف سمارت</h2>
       </div>
-      <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-microchip"></i> حالة الأجهزة</h3><button id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button></div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: center;">
-          <div><i class="fas fa-microchip"></i> ESP32: <span id="espStatusAdmin">--</span></div>
-          <div><i class="fas fa-wifi"></i> WiFi: <span id="wifiStatusAdmin">--</span></div>
-          <div><i class="fas fa-heartbeat"></i> آخر نبضة: <span id="lastHeartbeatAdmin">--</span></div>
-          <div><i class="fas fa-memory"></i> ذاكرة حرة: <span id="freeHeapAdmin">--</span></div>
+      <div class="sidebar-nav">
+        <div class="nav-item active" data-section="dashboard">
+          <i class="fas fa-tachometer-alt"></i> لوحة التحكم
+        </div>
+        <div class="nav-item" data-section="slots">
+          <i class="fas fa-th-large"></i> المواقف
+        </div>
+        <div class="nav-item" data-section="reservations">
+          <i class="fas fa-calendar-check"></i> الحجوزات
+        </div>
+        <div class="nav-item" data-section="liveAccess">
+          <i class="fas fa-key"></i> الأكواد النشطة
+        </div>
+        <div class="nav-item" data-section="users">
+          <i class="fas fa-users"></i> المستخدمون
+        </div>
+        <div class="nav-item" data-section="gates">
+          <i class="fas fa-door-open"></i> البوابات
+        </div>
+        <div class="nav-item" data-section="system">
+          <i class="fas fa-sliders-h"></i> النظام
+        </div>
+        <div class="nav-item" data-section="logs">
+          <i class="fas fa-history"></i> السجلات
+        </div>
+        <div class="nav-item" data-section="embedded_tools">
+          <i class="fas fa-microchip"></i> الأدوات المضمنة
+        </div>
+        <div class="nav-item nav-logout" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> تسجيل خروج
         </div>
       </div>
     </div>
-    <div id="slots" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-list"></i> جميع المواقف</h3></div><div class="table-container"><table><thead><tr><th>الموقف</th><th>الحالة</th><th>محجوز بواسطة</th><th>وقت الحجز</th></tr></thead><tbody id="slotsTable"></tbody></table></div></div></div>
-    <div id="reservations" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> الحجوزات</h3></div><div class="table-container"><table><thead><tr><th>المستخدم</th><th>الموقف</th><th>الحالة</th><th>ينتهي في</th><th>الكود</th></tr></thead><tbody id="reservationsTable"></tbody></table></div></div></div>
-    <div id="liveAccess" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-key"></i> أكواد الدخول النشطة</h3></div><div class="table-container"><tr><thead><tr><th>الكود</th><th>المستخدم</th><th>الموقف</th><th>ينتهي في</th><th>الإجراء</th></tr></thead><tbody id="liveAccessTable"></tbody></table></div></div></div>
-    <div id="users" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-user-cog"></i> إدارة المستخدمين</h3></div><div class="table-container"><table><thead><tr><th>البريد</th><th>الدور</th><th>الحالة</th><th>تغيير الدور</th></td></thead><tbody id="usersTable"></tbody></table></div></div></div>
-    <div id="gates" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-door-closed"></i> التحكم بالبوابات</h3></div><div style="display: flex; gap: 30px; flex-wrap: wrap;"><div><h4>بوابة الدخول</h4><div id="entryGateStatus">مغلقة</div><button onclick="controlGate('entry', true)"><i class="fas fa-unlock-alt"></i> فتح</button> <button onclick="controlGate('entry', false)"><i class="fas fa-lock"></i> إغلاق</button></div><div><h4>بوابة الخروج</h4><div id="exitGateStatus">مغلقة</div><button onclick="controlGate('exit', true)"><i class="fas fa-unlock-alt"></i> فتح</button> <button onclick="controlGate('exit', false)"><i class="fas fa-lock"></i> إغلاق</button></div></div></div></div>
-    <div id="system" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-sliders-h"></i> إعدادات النظام</h3></div><div style="display: grid; gap: 20px; max-width: 450px;"><div><label>سعر الساعة ($)</label><input type="number" id="pricePerHour" value="5"></div><div><label>مدة الحجز الافتراضية (دقيقة)</label><input type="number" id="defaultHold" value="30"></div><button id="saveSettingsBtn"><i class="fas fa-save"></i> حفظ الإعدادات</button><button id="emergencyStopBtn" class="danger"><i class="fas fa-ban"></i> إيقاف طوارئ</button></div></div></div>
-    <div id="logs" class="section"><div class="panel"><div class="panel-header"><h3><i class="fas fa-list-ul"></i> سجلات النظام</h3><button id="clearLogsBtn"><i class="fas fa-trash-alt"></i> مسح الكل</button></div><div class="table-container"><table><thead></table><th>الوقت</th><th>الإجراء</th><th>المستخدم</th></tr></thead><tbody id="logsTable"></tbody></table></div></div></div>
 
-    <!-- قسم Embedded Tools - يظهر زر لفتح الأداة في نافذة جديدة -->
-    <div id="embedded_tools" class="section" style="padding: 40px 20px; text-align: center;">
-      <div class="panel" style="max-width: 500px; margin: 0 auto;">
-        <i class="fas fa-microchip" style="font-size: 64px; color: #3b82f6; margin-bottom: 20px;"></i>
-        <h2 style="margin-bottom: 16px;">🧰 Embedded Tools Suite</h2>
-        <p style="color: #94a3b8; margin-bottom: 24px;">ستُفتح الأداة المتكاملة (محرر Arduino IDE، محاكي الدوائر، ومنشئ الدوائر) في نافذة جديدة لتتمكن من استخدامها بسهولة.</p>
-        <button id="openEmbeddedToolsBtn" class="success" style="font-size: 16px; padding: 12px 28px;">
-          <i class="fas fa-external-link-alt"></i> فتح الأداة في نافذة جديدة
-        </button>
+    <button
+      id="mobileMenuToggle"
+      style="
+        display: none;
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent), var(--purple));
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px var(--accent-glow);
+        transition: all 0.3s ease;
+      ">
+      <i class="fas fa-bars"></i>
+    </button>
+    <style>
+      #mobileMenuToggle:hover {
+        transform: scale(1.08) !important;
+        box-shadow: 0 8px 28px var(--accent-glow) !important;
+      }
+      #mobileMenuToggle:active {
+        transform: scale(0.93) !important;
+      }
+    </style>
+
+    <!-- Overlay for sidebar on mobile -->
+    <div
+      id="sidebarOverlay"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 99;
+      "></div>
+
+    <div
+      style="
+        position: fixed;
+        bottom: 12px;
+        right: 50%;
+        transform: translateX(50%);
+        z-index: 50;
+        font-size: 10px;
+        color: var(--text-muted);
+        opacity: 0.5;
+        letter-spacing: 0.3px;
+        text-align: center;
+        pointer-events: none;
+      "
+      id="adminLastUpdated">
+      ⏱️ —
+    </div>
+
+    <div class="main">
+      <!-- ===== DASHBOARD ===== -->
+      <div id="dashboard" class="section active">
+        <div class="page-header">
+          <h1><i class="fas fa-tachometer-alt"></i> لوحة التحكم</h1>
+          <p>مرحباً بك في نظام إدارة مواقف السيارات الذكي</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-parking"></i></div>
+            <div class="label">
+              <i class="fas fa-square" style="color: var(--green)"></i> الأماكن
+              المتاحة
+            </div>
+            <div class="value" id="adminAvailable">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-car"></i></div>
+            <div class="label">
+              <i class="fas fa-square" style="color: var(--red)"></i> المشغولة
+            </div>
+            <div class="value" id="adminOccupied">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-bookmark"></i></div>
+            <div class="label">
+              <i class="fas fa-calendar-day" style="color: var(--amber)"></i>
+              الحجوزات النشطة
+            </div>
+            <div class="value" id="adminActiveRes">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="label">
+              <i class="fas fa-user-friends" style="color: var(--purple)"></i>
+              إجمالي المستخدمين
+            </div>
+            <div class="value" id="adminTotalUsers">0</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-microchip"></i> حالة الأجهزة</h3>
+            <button id="refreshBtn">
+              <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+          </div>
+          <div class="sys-monitor">
+            <div>
+              <span class="sys-mon-icon">🖥️</span>
+              <span class="sys-mon-label">ESP32</span>
+              <span class="sys-mon-value" id="espStatusAdmin">--</span>
+            </div>
+            <div>
+              <span class="sys-mon-icon">📶</span>
+              <span class="sys-mon-label">WiFi</span>
+              <span class="sys-mon-value" id="wifiStatusAdmin">--</span>
+            </div>
+            <div>
+              <span class="sys-mon-icon">💓</span>
+              <span class="sys-mon-label">آخر نبضة</span>
+              <span class="sys-mon-value" id="lastHeartbeatAdmin">--</span>
+            </div>
+            <div>
+              <span class="sys-mon-icon">🧠</span>
+              <span class="sys-mon-label">ذاكرة حرة</span>
+              <span class="sys-mon-value" id="freeHeapAdmin">--</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-chart-bar"></i> إشغال المواقف</h3>
+          </div>
+          <div style="position: relative; height: 200px">
+            <canvas id="occupancyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLOTS ===== -->
+      <div id="slots" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-th-large"></i> المواقف</h1>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-list"></i> جميع المواقف</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>الموقف</th>
+                  <th>الحالة</th>
+                  <th>محجوز بواسطة</th>
+                  <th>وقت الحجز</th>
+                </tr>
+              </thead>
+              <tbody id="slotsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RESERVATIONS ===== -->
+      <div id="reservations" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-calendar-check"></i> الحجوزات</h1>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-calendar-alt"></i> جميع الحجوزات</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>المستخدم</th>
+                  <th>الموقف</th>
+                  <th>الحالة</th>
+                  <th>ينتهي في</th>
+                  <th>الكود</th>
+                </tr>
+              </thead>
+              <tbody id="reservationsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== LIVE ACCESS ===== -->
+      <div id="liveAccess" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-key"></i> أكواد الدخول النشطة</h1>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-shield-alt"></i> أكواد OTP النشطة</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>الكود</th>
+                  <th>المستخدم</th>
+                  <th>الموقف</th>
+                  <th>ينتهي في</th>
+                  <th>الإجراء</th>
+                </tr>
+              </thead>
+              <tbody id="liveAccessTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== USERS ===== -->
+      <div id="users" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-users"></i> المستخدمون</h1>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-user-cog"></i> إدارة المستخدمين</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>البريد</th>
+                  <th>الدور</th>
+                  <th>الحالة</th>
+                  <th>تغيير الدور</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GATES ===== -->
+      <div id="gates" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-door-open"></i> البوابات</h1>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-robot"></i> التحكم بالبوابات</h3>
+          </div>
+          <div class="gate-controls">
+            <div class="gate-card">
+              <h4>🚪 بوابة الدخول</h4>
+              <div class="gate-status-display" id="entryGateStatus">
+                🔴 مغلقة
+              </div>
+              <div class="gate-actions">
+                <button onclick="controlGate('entry', true)">
+                  <i class="fas fa-unlock-alt"></i> فتح
+                </button>
+                <button class="danger" onclick="controlGate('entry', false)">
+                  <i class="fas fa-lock"></i> إغلاق
+                </button>
+              </div>
+            </div>
+            <div class="gate-card">
+              <h4>🚙 بوابة الخروج</h4>
+              <div class="gate-status-display" id="exitGateStatus">
+                🔴 مغلقة
+              </div>
+              <div class="gate-actions">
+                <button onclick="controlGate('exit', true)">
+                  <i class="fas fa-unlock-alt"></i> فتح
+                </button>
+                <button class="danger" onclick="controlGate('exit', false)">
+                  <i class="fas fa-lock"></i> إغلاق
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SYSTEM ===== -->
+      <div id="system" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-sliders-h"></i> إعدادات النظام</h1>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-cog"></i> الإعدادات العامة</h3>
+          </div>
+          <div class="settings-grid">
+            <div>
+              <label
+                ><i class="fas fa-dollar-sign" style="color: var(--amber)"></i>
+                سعر الساعة</label
+              >
+              <input type="number" id="pricePerHour" value="5" />
+            </div>
+            <div>
+              <label
+                ><i class="fas fa-clock" style="color: var(--teal)"></i> مدة
+                الحجز الافتراضية (دقيقة)</label
+              >
+              <input type="number" id="defaultHold" value="30" />
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+              <button id="saveSettingsBtn">
+                <i class="fas fa-save"></i> حفظ الإعدادات
+              </button>
+              <button id="emergencyStopBtn" class="danger">
+                <i class="fas fa-ban"></i> إيقاف طوارئ
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== LOGS ===== -->
+      <div id="logs" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-history"></i> سجلات النظام</h1>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-list-ul"></i> السجلات</h3>
+            <button class="danger" id="clearLogsBtn">
+              <i class="fas fa-trash-alt"></i> مسح الكل
+            </button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>الإجراء</th>
+                  <th>المستخدم</th>
+                </tr>
+              </thead>
+              <tbody id="logsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ARDUINO IDE ===== -->
+      <div id="embedded_tools" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-microchip"></i> Arduino IDE المضمنة</h1>
+        </div>
+        <div class="panel" style="padding: 0; overflow: hidden">
+          <div class="ide-container">
+            <!-- TOOLBAR -->
+            <div class="ide-toolbar">
+              <div class="toolbar-group">
+                <select id="ideBoardSelect" title="اختر اللوحة">
+                  <option value="esp32">ESP32 Dev Module</option>
+                  <option value="esp8266">ESP8266 NodeMCU</option>
+                  <option value="uno">Arduino Uno</option>
+                  <option value="mega">Arduino Mega 2560</option>
+                  <option value="nano">Arduino Nano</option>
+                  <option value="pico">Raspberry Pi Pico</option>
+                </select>
+              </div>
+              <div class="toolbar-divider"></div>
+              <div class="toolbar-group">
+                <button
+                  class="tb-btn verify"
+                  id="ideVerifyBtn"
+                  title="تحقق من الكود">
+                  <i class="fas fa-check-circle"></i>
+                </button>
+                <button
+                  class="tb-btn"
+                  id="ideCompileBtn"
+                  type="button"
+                  title="ترجمة الكود (سيرفر الترجمة)"
+                  style="color: var(--amber)">
+                  <i class="fas fa-hammer"></i>
+                </button>
+                <button
+                  class="tb-btn upload"
+                  id="ideUploadBtn"
+                  title="رفع عبر WiFi (Firebase)">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </button>
+                <button
+                  class="tb-btn"
+                  id="ideDownloadBtn"
+                  title="تنزيل كـ .ino">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+              <div class="toolbar-divider"></div>
+              <div class="toolbar-group">
+                <button class="tb-btn" id="ideExamplesBtn" title="الأمثلة">
+                  <i class="fas fa-folder-open"></i>
+                </button>
+                <button class="tb-btn" id="ideTemplatesBtn" title="قوالب جاهزة">
+                  <i class="fas fa-file-code"></i>
+                </button>
+                <button class="tb-btn" id="idePinoutBtn" title="مخطط الأطراف">
+                  <i class="fas fa-microchip"></i>
+                </button>
+              </div>
+              <div class="toolbar-divider"></div>
+              <div class="toolbar-group hide-mobile">
+                <button class="tb-btn" id="ideFullscreenBtn" title="تكبير">
+                  <i class="fas fa-expand"></i>
+                </button>
+              </div>
+              <div class="toolbar-divider"></div>
+              <div class="toolbar-group" style="gap: 4px">
+                <select
+                  id="idePortSelect"
+                  title="اختر المنفذ التسلسلي"
+                  style="
+                    width: auto;
+                    min-width: 100px;
+                    padding: 6px 8px;
+                    font-size: 11px;
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 6px;
+                    font-family: var(--font);
+                    color: var(--text);
+                    border: 1px solid var(--border);
+                  ">
+                  <option value="">🔌 منفذ</option>
+                </select>
+                <button class="tb-btn" id="idePortConnectBtn" title="اتصال">
+                  <i class="fas fa-plug"></i>
+                </button>
+                <button class="tb-btn" id="idePortRefreshBtn" title="تحديث">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+                <button
+                  class="tb-btn"
+                  id="ideChipInfoBtn"
+                  title="معلومات الشيب"
+                  disabled>
+                  <i class="fas fa-microchip"></i>
+                </button>
+                <input
+                  type="file"
+                  id="ideBinFile"
+                  accept=".bin,.hex"
+                  style="display: none" />
+                <button
+                  class="tb-btn upload"
+                  id="ideFlashBtn"
+                  title="فلش الـ ESP32"
+                  disabled
+                  style="opacity: 0.4">
+                  <i class="fas fa-bolt"></i>
+                </button>
+                <label
+                  for="ideBinFile"
+                  class="tb-btn"
+                  id="ideBinLabel"
+                  title="اختر ملف .bin"
+                  style="
+                    cursor: pointer;
+                    font-size: 10px;
+                    padding: 6px 10px;
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid var(--border);
+                    border-radius: 8px;
+                    color: var(--text-soft);
+                    transition: all 0.2s;
+                  "
+                  >📁 .bin</label
+                >
+              </div>
+            </div>
+
+            <!-- MAIN EDITOR AREA -->
+            <div class="ide-main">
+              <!-- File sidebar -->
+              <div class="ide-sidebar">
+                <div class="ide-sidebar-header">
+                  <span>📂 المشروع</span>
+                  <button id="ideNewFileBtn" title="ملف جديد">+</button>
+                </div>
+                <div class="ide-file-list" id="ideFileList">
+                  <div class="ide-file-item active" data-file="sketch.ino">
+                    <span class="file-icon">📄</span>sketch.ino
+                  </div>
+                  <div class="ide-file-item" data-file="config.h">
+                    <span class="file-icon">📄</span>config.h
+                  </div>
+                  <div class="ide-file-item" data-file="secrets.h">
+                    <span class="file-icon">🔒</span>secrets.h
+                  </div>
+                </div>
+              </div>
+
+              <!-- Editor -->
+              <div class="ide-editor-wrap">
+                <div class="ide-editor-tabs" id="ideEditorTabs">
+                  <div class="ide-editor-tab active" data-file="sketch.ino">
+                    📄 sketch.ino
+                  </div>
+                  <div class="ide-editor-tab" data-file="config.h">
+                    📄 config.h
+                  </div>
+                  <div class="ide-editor-tab" data-file="secrets.h">
+                    🔒 secrets.h
+                  </div>
+                </div>
+                <div style="flex: 1; position: relative; overflow: hidden">
+                  <textarea id="ideEditor"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- SERIAL CONSOLE -->
+            <div class="ide-bottom">
+              <div class="ide-console-header" id="ideConsoleToggle">
+                <span class="con-label"
+                  ><i class="fas fa-terminal"></i> Serial Monitor
+                  <span
+                    style="
+                      font-weight: 400;
+                      color: var(--text-muted);
+                      font-size: 10px;
+                    "
+                    id="ideConsoleStatus"
+                    >— متصل</span
+                  ></span
+                >
+                <div class="con-actions">
+                  <button id="ideConsoleClear" title="مسح">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                  <button id="ideConsoleCollapse" title="طي">
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div
+                class="ide-console-body"
+                id="ideConsoleBody"
+                style="direction: ltr; text-align: left">
+                <div class="log-line system">
+                  // Arduino IDE — اكتب كودك، اختر المنفذ، و اضغط ☁ أو ⚡
+                </div>
+                <div class="log-line system">
+                  // ☁ رفع عبر WiFi (Firebase) | ⚡ فلش مباشر عبر Serial (اختر
+                  .bin أولاً)
+                </div>
+              </div>
+              <div class="ide-console-input-row">
+                <input
+                  type="text"
+                  id="ideConsoleInput"
+                  placeholder="أرسل أمراً إلى المنفذ التسلسلي..."
+                  dir="ltr"
+                  spellcheck="false" />
+                <button id="ideConsoleSendBtn">
+                  <i class="fas fa-paper-plane"></i> إرسال
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EXAMPLES MODAL ===== -->
+      <div class="ide-modal-overlay" id="ideExamplesModal">
+        <div class="ide-modal">
+          <div class="ide-modal-header">
+            <h2><i class="fas fa-folder-open"></i> الأمثلة الجاهزة</h2>
+            <button class="close-modal" id="ideExamplesClose">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="ide-modal-body">
+            <div class="example-grid" id="ideExamplesGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TEMPLATES MODAL ===== -->
+      <div class="ide-modal-overlay" id="ideTemplatesModal">
+        <div class="ide-modal" style="max-width: 500px">
+          <div class="ide-modal-header">
+            <h2><i class="fas fa-file-code"></i> قوالب الكود</h2>
+            <button class="close-modal" id="ideTemplatesClose">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="ide-modal-body">
+            <div class="template-grid" id="ideTemplatesGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PINOUT MODAL ===== -->
+      <div class="ide-modal-overlay" id="idePinoutModal">
+        <div class="ide-modal" style="max-width: 600px">
+          <div class="ide-modal-header">
+            <h2>
+              <i class="fas fa-microchip"></i>
+              <span id="idePinoutTitle">ESP32</span> — Pinout
+            </h2>
+            <button class="close-modal" id="idePinoutClose">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="ide-modal-body" id="idePinoutBody"></div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-<script type="module" src="./admin.js"></script>
-</body>
+
+    <script>
+      // Live timestamp
+      function updTs() {
+        const el = document.getElementById("adminLastUpdated");
+        if (el)
+          el.textContent = `⏱️ ${new Date().toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+      }
+      updTs();
+      setInterval(updTs, 1000);
+
+      // ===== MOUSE GLOW =====
+      (function () {
+        const glow = document.createElement("div");
+        glow.className = "mouse-glow";
+        document.body.prepend(glow);
+        document.addEventListener("mousemove", (e) => {
+          glow.style.left = e.clientX + "px";
+          glow.style.top = e.clientY + "px";
+        });
+      })();
+
+      // ===== STAT VALUE POP =====
+      (function () {
+        const vals = document.querySelectorAll(".stat-card .value");
+        let last = {};
+        setInterval(() => {
+          vals.forEach((v) => {
+            const t = v.textContent;
+            if (last[v.id] !== undefined && last[v.id] !== t) {
+              v.classList.remove("pop");
+              void v.offsetWidth;
+              v.classList.add("pop");
+            }
+            last[v.id] = t;
+          });
+        }, 300);
+      })();
+
+      // ================================================================
+      // ===== ARDUINO IDE ENGINE =====
+      // ================================================================
+      (function () {
+        const EDITOR_STORAGE_KEY = "arduino_ide_files";
+        const BOARD_PINOUTS = {
+          esp32: {
+            title: "ESP32 Dev Module",
+            pins: [
+              { num: "3.3V", func: "3.3V Power" },
+              { num: "EN", func: "Enable / RST" },
+              { num: "GPIO36", func: "ADC1_CH0 / S_VP" },
+              { num: "GPIO39", func: "ADC1_CH3 / S_VN" },
+              { num: "GPIO34", func: "ADC1_CH6 / Input" },
+              { num: "GPIO35", func: "ADC1_CH7 / Input" },
+              { num: "GPIO32", func: "ADC1_CH4 / Touch9" },
+              { num: "GPIO33", func: "ADC1_CH5 / Touch8" },
+              { num: "GPIO25", func: "DAC1 / ADC2_CH8" },
+              { num: "GPIO26", func: "DAC2 / ADC2_CH9" },
+              { num: "GPIO27", func: "ADC2_CH7 / Touch7" },
+              { num: "GPIO14", func: "ADC2_CH6 / Touch6" },
+              { num: "GPIO12", func: "ADC2_CH5 / Touch5" },
+              { num: "GPIO13", func: "ADC2_CH4 / Touch4" },
+              { num: "GPIO9", func: "D2 / RGB_WD" },
+              { num: "GPIO10", func: "D3 / RGB_WD" },
+              { num: "GPIO5", func: "ADC2_CH0 / Touch0" },
+              { num: "GPIO18", func: "SCK / SPI" },
+              { num: "GPIO23", func: "MOSI / SPI" },
+              { num: "GPIO19", func: "MISO / SPI" },
+              { num: "GPIO21", func: "SDA / I2C" },
+              { num: "GPIO22", func: "SCL / I2C" },
+              { num: "GPIO4", func: "ADC2_CH0 / Touch0" },
+              { num: "GPIO2", func: "ADC2_CH2 / Touch2" },
+              { num: "GPIO15", func: "ADC2_CH3 / Touch3" },
+              { num: "GND", func: "Ground" },
+            ],
+          },
+          uno: {
+            title: "Arduino Uno",
+            pins: [
+              { num: "D0", func: "RX (Serial)" },
+              { num: "D1", func: "TX (Serial)" },
+              { num: "D2", func: "Interrupt 0" },
+              { num: "D3", func: "Interrupt 1 / PWM" },
+              { num: "D4", func: "Digital I/O" },
+              { num: "D5", func: "PWM" },
+              { num: "D6", func: "PWM" },
+              { num: "D7", func: "Digital I/O" },
+              { num: "D8", func: "Digital I/O" },
+              { num: "D9", func: "PWM" },
+              { num: "D10", func: "SS / PWM" },
+              { num: "D11", func: "MOSI / PWM" },
+              { num: "D12", func: "MISO" },
+              { num: "D13", func: "SCK / LED" },
+              { num: "A0", func: "Analog In" },
+              { num: "A1", func: "Analog In" },
+              { num: "A2", func: "Analog In" },
+              { num: "A3", func: "Analog In" },
+              { num: "A4", func: "SDA (I2C)" },
+              { num: "A5", func: "SCL (I2C)" },
+              { num: "5V", func: "5V Power" },
+              { num: "3.3V", func: "3.3V Power" },
+              { num: "GND", func: "Ground" },
+              { num: "Vin", func: "Input Voltage" },
+            ],
+          },
+          mega: {
+            title: "Arduino Mega 2560",
+            pins: [
+              { num: "D0", func: "RX0" },
+              { num: "D1", func: "TX0" },
+              { num: "D14", func: "TX3" },
+              { num: "D15", func: "RX3" },
+              { num: "D2", func: "Interrupt 0" },
+              { num: "D3", func: "Interrupt 1 / PWM" },
+              { num: "D4-D13", func: "Digital I/O / PWM" },
+              { num: "D18", func: "SDA (I2C)" },
+              { num: "D19", func: "SCL (I2C)" },
+              { num: "D20", func: "SDA (I2C)" },
+              { num: "D21", func: "SCL (I2C)" },
+              { num: "A0-A15", func: "Analog In (0-15)" },
+              { num: "D44-D46", func: "PWM" },
+              { num: "D9-D12", func: "PWM" },
+              { num: "5V", func: "5V Power" },
+              { num: "3.3V", func: "3.3V Power" },
+              { num: "GND", func: "Ground" },
+              { num: "Vin", func: "Input Voltage" },
+              { num: "ICSP", func: "SPI Header" },
+              { num: "AREF", func: "Analog Ref" },
+            ],
+          },
+          nano: {
+            title: "Arduino Nano",
+            pins: [
+              { num: "D0", func: "RX" },
+              { num: "D1", func: "TX" },
+              { num: "D2", func: "Interrupt 0" },
+              { num: "D3", func: "Interrupt 1 / PWM" },
+              { num: "D4-D8", func: "Digital I/O" },
+              { num: "D9-D11", func: "PWM" },
+              { num: "D12", func: "MISO" },
+              { num: "D13", func: "SCK / LED" },
+              { num: "A0-A7", func: "Analog In" },
+              { num: "A4", func: "SDA" },
+              { num: "A5", func: "SCL" },
+              { num: "5V", func: "5V Power" },
+              { num: "3.3V", func: "3.3V Power" },
+              { num: "GND", func: "Ground" },
+              { num: "Vin", func: "Input Voltage" },
+              { num: "RST", func: "Reset" },
+            ],
+          },
+          esp8266: {
+            title: "ESP8266 NodeMCU",
+            pins: [
+              { num: "D0", func: "GPIO16 / WAKE" },
+              { num: "D1", func: "GPIO5 / SCL" },
+              { num: "D2", func: "GPIO4 / SDA" },
+              { num: "D3", func: "GPIO0 / FLASH" },
+              { num: "D4", func: "GPIO2 / LED" },
+              { num: "D5", func: "GPIO14 / SCK" },
+              { num: "D6", func: "GPIO12 / MISO" },
+              { num: "D7", func: "GPIO13 / MOSI" },
+              { num: "D8", func: "GPIO15 / SS" },
+              { num: "D9", func: "GPIO3 / RX" },
+              { num: "D10", func: "GPIO1 / TX" },
+              { num: "A0", func: "Analog In (0-3.3V)" },
+              { num: "3.3V", func: "3.3V Power" },
+              { num: "GND", func: "Ground" },
+              { num: "Vin", func: "Input Voltage (5V)" },
+            ],
+          },
+          pico: {
+            title: "Raspberry Pi Pico",
+            pins: [
+              { num: "GP0", func: "UART TX / I2C SDA" },
+              { num: "GP1", func: "UART RX / I2C SCL" },
+              { num: "GP2-GP5", func: "Digital I/O / ADC" },
+              { num: "GP6-GP9", func: "Digital I/O / SPI" },
+              { num: "GP10-GP13", func: "Digital I/O / I2C" },
+              { num: "GP14-GP17", func: "Digital I/O / UART" },
+              { num: "GP18-GP21", func: "Digital I/O / SPI" },
+              { num: "GP22", func: "Digital I/O" },
+              { num: "GP26", func: "ADC0" },
+              { num: "GP27", func: "ADC1" },
+              { num: "GP28", func: "ADC2" },
+              { num: "GP29", func: "ADC3 / VSYS" },
+              { num: "3.3V", func: "3.3V Power" },
+              { num: "5V", func: "VBUS Power" },
+              { num: "GND", func: "Ground (3 pins)" },
+              { num: "RUN", func: "Reset" },
+            ],
+          },
+        };
+
+        // ===== DEFAULT FILES =====
+        const DEFAULT_FILES = {
+          "sketch.ino": `// موقف سمارت - كود التحكم بالبوابة
+#include <WiFi.h>
+#include <Firebase_ESP_Client.h>
+#include <LiquidCrystal_I2C.h>
+#include <Adafruit_PWMServoDriver.h>
+
+// إعدادات WiFi
+const char* WIFI_SSID = "YourWiFi";
+const char* WIFI_PASS = "YourPassword";
+
+// Firebase
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+// LCD 16×2
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// PCA9685 للسيرفو
+Adafruit_PWMServoDriver pwm;
+
+// حساسات الدخول
+#define BEFORE_SENSOR  32
+#define AFTER_SENSOR   33
+
+// حساسات الخروج
+#define EXIT_SENSOR    25
+
+// حالة البوابة
+bool entryOpen = false;
+bool exitOpen = false;
+unsigned long lastPoll = 0;
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(BEFORE_SENSOR, INPUT_PULLUP);
+  pinMode(AFTER_SENSOR, INPUT_PULLUP);
+  pinMode(EXIT_SENSOR, INPUT_PULLUP);
+
+  // تشغيل LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Parking System");
+  lcd.setCursor(0, 1);
+  lcd.print("Connecting...");
+
+  // تشغيل PCA9685
+  pwm.begin();
+  pwm.setPWMFreq(50);
+
+  // إغلاق البوابات
+  closeEntryGate();
+  closeExitGate();
+
+  // اتصال WiFi
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\\nWiFi connected!");
+
+  // Firebase
+  config.api_key = "YOUR_API_KEY";
+  auth.user.email = "parking@test.com";
+  auth.user.password = "parking123";
+  Firebase.begin(&config, &auth);
+
+  lcd.clear();
+  lcd.print("System Ready!");
+}
+
+void loop() {
+  if (millis() - lastPoll > 400) {
+    lastPoll = millis();
+    checkSensors();
+    checkFirebase();
+  }
+}
+
+void checkSensors() {
+  if (digitalRead(BEFORE_SENSOR) == LOW && !entryOpen) {
+    openEntryGate();
+  }
+  if (digitalRead(AFTER_SENSOR) == LOW && entryOpen) {
+    delay(2000);
+    closeEntryGate();
+  }
+  if (digitalRead(EXIT_SENSOR) == LOW && !exitOpen) {
+    openExitGate();
+    delay(4000);
+    closeExitGate();
+  }
+}
+
+void checkFirebase() {
+  // التحقق من طلبات فتح البوابة
+  Firebase.RTDB.get(&fbdo, "/commands/gateOpenRequest");
+  if (fbdo.dataType() == "json") {
+    String otp = fbdo.to<FirebaseJson>().getString("otp");
+    if (otp.length() > 0) {
+      lcd.clear();
+      lcd.print("OTP: ");
+      lcd.print(otp);
+    }
+  }
+}
+
+void openEntryGate() {
+  pwm.setPWM(0, 0, 300);
+  entryOpen = true;
+  Firebase.RTDB.setString(&fbdo, "/gates/entry/open", "true");
+}
+
+void closeEntryGate() {
+  for (int i = 300; i >= 200; i -= 2) {
+    pwm.setPWM(0, 0, i);
+    delay(10);
+  }
+  entryOpen = false;
+  Firebase.RTDB.setString(&fbdo, "/gates/entry/open", "false");
+}
+
+void openExitGate() {
+  pwm.setPWM(1, 0, 215);
+  exitOpen = true;
+  Firebase.RTDB.setString(&fbdo, "/gates/exit/open", "true");
+}
+
+void closeExitGate() {
+  for (int i = 215; i <= 420; i += 2) {
+    pwm.setPWM(1, 0, i);
+    delay(10);
+  }
+  exitOpen = false;
+  Firebase.RTDB.setString(&fbdo, "/gates/exit/open", "false");
+}`,
+          "config.h": `// ===== إعدادات النظام =====
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// WIFI
+#define WIFI_TIMEOUT_MS  10000
+#define WIFI_RETRY_DELAY 5000
+
+// الحساسات
+#define BEFORE_SENSOR_PIN  32
+#define AFTER_SENSOR_PIN   33
+#define EXIT_SENSOR_PIN    25
+
+// السيرفو
+#define ENTRY_SERVO_CHANNEL  0
+#define EXIT_SERVO_CHANNEL   1
+#define SERVO_FREQ           50
+
+// PWM للسيرفو
+#define ENTRY_OPEN_PWM   300
+#define ENTRY_CLOSE_PWM  200
+#define EXIT_OPEN_PWM    215
+#define EXIT_CLOSE_PWM   420
+
+// التوقيت
+#define POLL_INTERVAL_MS    400
+#define EXIT_CLOSE_DELAY_MS 4000
+#define ENTRY_CLOSE_DELAY_MS 2000
+
+// Firebase
+#define FIREBASE_POLL_PATH  "/commands/gateOpenRequest"
+#define GATE_STATUS_PATH    "/gates"
+
+#endif`,
+          "secrets.h": `// ===== بيانات الحساسة =====
+// ⚠️ لا تشارك هذا الملف مع أحد!
+#ifndef SECRETS_H
+#define SECRETS_H
+
+#define WIFI_SSID     "YourWiFi_SSID"
+#define WIFI_PASSWORD "YourWiFi_Password"
+
+#define FIREBASE_API_KEY    "AIzaSyBHFT1kSAa0kwxfQQWK4ZSMcv-N0PdqIr8"
+#define FIREBASE_DB_URL     "https://iot-smart-parking-49293-default-rtdb.firebaseio.com"
+
+#define FIREBASE_USER_EMAIL    "parking@test.com"
+#define FIREBASE_USER_PASSWORD "parking123"
+
+#define LCD_I2C_ADDRESS  0x27
+
+#endif`,
+        };
+
+        // ===== EXAMPLES =====
+        const EXAMPLES = [
+          {
+            id: "blink",
+            icon: "💡",
+            name: "Blink LED",
+            desc: "تشغيل وإطفاء LED على D13",
+            code: `void setup() {\n  pinMode(LED_BUILTIN, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(LED_BUILTIN, HIGH);\n  delay(1000);\n  digitalWrite(LED_BUILTIN, LOW);\n  delay(1000);\n}`,
+          },
+          {
+            id: "parking",
+            icon: "🅿️",
+            name: "Parking Gate",
+            desc: "نظام بوابة موقف السيارات الكامل",
+            code: DEFAULT_FILES["sketch.ino"],
+          },
+          {
+            id: "ultrasonic",
+            icon: "📏",
+            name: "Ultrasonic",
+            desc: "قياس المسافة باستخدام HC-SR04",
+            code: `#define TRIG 9\n#define ECHO 10\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(TRIG, OUTPUT);\n  pinMode(ECHO, INPUT);\n}\n\nvoid loop() {\n  digitalWrite(TRIG, LOW); delayMicroseconds(2);\n  digitalWrite(TRIG, HIGH); delayMicroseconds(10);\n  digitalWrite(TRIG, LOW);\n  long dur = pulseIn(ECHO, HIGH);\n  float dist = dur * 0.034 / 2;\n  Serial.print("Distance: "); Serial.print(dist); Serial.println(" cm");\n  delay(500);\n}`,
+          },
+          {
+            id: "lcd",
+            icon: "🖥️",
+            name: "LCD Display",
+            desc: "عرض نص على شاشة 16×2 I2C",
+            code: `#include <LiquidCrystal_I2C.h>\nLiquidCrystal_I2C lcd(0x27,16,2);\n\nvoid setup() {\n  lcd.init(); lcd.backlight();\n  lcd.setCursor(0,0);\n  lcd.print("Hello, World!");\n  lcd.setCursor(0,1);\n  lcd.print("Parking System");\n}\n\nvoid loop() {}`,
+          },
+          {
+            id: "servo",
+            icon: "🔄",
+            name: "Servo Motor",
+            desc: "تحريك سيرفو 0-180 درجة",
+            code: `#include <Servo.h>\nServo myservo;\nint pos = 0;\n\nvoid setup() {\n  myservo.attach(9);\n}\n\nvoid loop() {\n  for(pos=0; pos<=180; pos+=1) {\n    myservo.write(pos); delay(15);\n  }\n  for(pos=180; pos>=0; pos-=1) {\n    myservo.write(pos); delay(15);\n  }\n}`,
+          },
+          {
+            id: "wifi",
+            icon: "📶",
+            name: "WiFi Scanner",
+            desc: "مسح شبكات WiFi المتاحة",
+            code: `#include <WiFi.h>\n\nvoid setup() {\n  Serial.begin(115200);\n  WiFi.mode(WIFI_STA);\n  WiFi.disconnect();\n  delay(100);\n}\n\nvoid loop() {\n  int n = WiFi.scanNetworks();\n  Serial.print(n); Serial.println(" networks found");\n  for(int i=0; i<n; i++) {\n    Serial.print(i+1); Serial.print(": ");\n    Serial.print(WiFi.SSID(i));\n    Serial.print(" ("); Serial.print(WiFi.RSSI(i)); Serial.println(")");\n    delay(10);\n  }\n  delay(5000);\n}`,
+          },
+          {
+            id: "firebase",
+            icon: "🔥",
+            name: "Firebase Demo",
+            desc: "قراءة وكتابة بيانات من Firebase",
+            code: `#include <WiFi.h>\n#include <Firebase_ESP_Client.h>\n\nFirebaseData fbdo;\nFirebaseAuth auth;\nFirebaseConfig config;\n\nvoid setup() {\n  Serial.begin(115200);\n  WiFi.begin("SSID", "PASS");\n  while(WiFi.status() != WL_CONNECTED) delay(500);\n  \n  config.api_key = "API_KEY";\n  auth.user.email = "email@test.com";\n  auth.user.password = "password";\n  Firebase.begin(&config, &auth);\n}\n\nvoid loop() {\n  if(Firebase.ready()) {\n    Firebase.RTDB.setInt(&fbdo, "/test/value", 42);\n    delay(2000);\n    Firebase.RTDB.getInt(&fbdo, "/test/value");\n    Serial.println(fbdo.intData());\n  }\n}`,
+          },
+          {
+            id: "rfid",
+            icon: "🔖",
+            name: "RFID Reader",
+            desc: "قراءة بطاقات RFID باستخدام RC522",
+            code: `#include <SPI.h>\n#include <MFRC522.h>\n#define SS_PIN 10\n#define RST_PIN 9\nMFRC522 rfid(SS_PIN, RST_PIN);\n\nvoid setup() {\n  Serial.begin(9600);\n  SPI.begin();\n  rfid.PCD_Init();\n}\n\nvoid loop() {\n  if(!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) return;\n  Serial.print("UID: ");\n  for(byte i=0; i<rfid.uid.size; i++) {\n    Serial.print(rfid.uid.uidByte[i], HEX);\n    Serial.print(" ");\n  }\n  Serial.println();\n  rfid.PICC_HaltA();\n}`,
+          },
+        ];
+
+        const TEMPLATES = [
+          {
+            id: "setup-loop",
+            icon: "🔧",
+            name: "Setup + Loop",
+            code: `void setup() {\n  Serial.begin(115200);\n  // ضع كود الإعداد هنا\n}\n\nvoid loop() {\n  // ضع الكود الرئيسي هنا\n  delay(100);\n}`,
+          },
+          {
+            id: "pwm-servo",
+            icon: "🔄",
+            name: "PWM Servo",
+            code: `#include <Adafruit_PWMServoDriver.h>\nAdafruit_PWMServoDriver pwm;\n\nvoid setup() {\n  pwm.begin();\n  pwm.setPWMFreq(50);\n}\n\nvoid loop() {\n  pwm.setPWM(0, 0, 300);  // افتح\n  delay(2000);\n  pwm.setPWM(0, 0, 200);  // اغلق\n  delay(2000);\n}`,
+          },
+          {
+            id: "lcd-i2c",
+            icon: "🖥️",
+            name: "LCD I2C",
+            code: `#include <LiquidCrystal_I2C.h>\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nvoid setup() {\n  lcd.init();\n  lcd.backlight();\n  lcd.setCursor(0, 0);\n  lcd.print("Hello!");\n}\n\nvoid loop() {}`,
+          },
+          {
+            id: "firebase-rtdb",
+            icon: "🔥",
+            name: "Firebase RTDB",
+            code: `#include <Firebase_ESP_Client.h>\nFirebaseData fbdo;\nFirebaseAuth auth;\nFirebaseConfig config;\n\nvoid setup() {\n  Serial.begin(115200);\n  config.api_key = "YOUR_API_KEY";\n  auth.user.email = "email";\n  auth.user.password = "pass";\n  Firebase.begin(&config, &auth);\n}\n\nvoid loop() {\n  if(Firebase.ready())\n    Firebase.RTDB.setInt(&fbdo, "/data/value", 1);\n}`,
+          },
+          {
+            id: "ultrasonic-sensor",
+            icon: "📏",
+            name: "Ultrasonic HC-SR04",
+            code: `#define TRIG 9\n#define ECHO 10\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(TRIG, OUTPUT);\n  pinMode(ECHO, INPUT);\n}\n\nvoid loop() {\n  digitalWrite(TRIG, LOW); delayMicroseconds(2);\n  digitalWrite(TRIG, HIGH); delayMicroseconds(10);\n  digitalWrite(TRIG, LOW);\n  long duration = pulseIn(ECHO, HIGH);\n  float cm = duration * 0.034 / 2;\n  Serial.println(cm);\n  delay(200);\n}`,
+          },
+          {
+            id: "button-led",
+            icon: "🔘",
+            name: "Button + LED",
+            code: `#define BUTTON 2\n#define LED 13\n\nvoid setup() {\n  pinMode(BUTTON, INPUT_PULLUP);\n  pinMode(LED, OUTPUT);\n}\n\nvoid loop() {\n  if(digitalRead(BUTTON) == LOW)\n    digitalWrite(LED, HIGH);\n  else\n    digitalWrite(LED, LOW);\n}`,
+          },
+        ];
+
+        // ===== STATE =====
+        let currentFile = "sketch.ino";
+        let files = JSON.parse(
+          localStorage.getItem(EDITOR_STORAGE_KEY) || "null",
+        ) || { ...DEFAULT_FILES };
+        let editor = null;
+        let consoleCollapsed = false;
+        let isFullscreen = false;
+
+        // ===== INIT EDITOR =====
+        function initEditor() {
+          const ta = document.getElementById("ideEditor");
+          if (!ta) return;
+          editor = CodeMirror.fromTextArea(ta, {
+            lineNumbers: true,
+            mode: "text/x-c++src",
+            theme: "dracula",
+            autoRefresh: true,
+            indentUnit: 2,
+            tabSize: 2,
+            indentWithTabs: false,
+            lineWrapping: true,
+            extraKeys: {
+              "Ctrl-S": () => saveCurrentFile(),
+              "Cmd-S": () => saveCurrentFile(),
+              "Ctrl-/": "toggleComment",
+              "Cmd-/": "toggleComment",
+            },
+          });
+          editor.on("changes", () => {
+            if (editor && currentFile) {
+              files[currentFile] = editor.getValue();
+              localStorage.setItem(EDITOR_STORAGE_KEY, JSON.stringify(files));
+            }
+          });
+          window._editor = editor;
+          loadFile(currentFile);
+        }
+
+        function loadFile(name) {
+          if (!editor) return;
+          currentFile = name;
+          editor.setValue(files[name] || "// كود جديد\n");
+          editor.clearHistory();
+          updateActiveTab(name);
+          updateActiveSidebar(name);
+        }
+
+        function saveCurrentFile() {
+          if (editor && currentFile) {
+            files[currentFile] = editor.getValue();
+            localStorage.setItem(EDITOR_STORAGE_KEY, JSON.stringify(files));
+            ideLog("✅ تم حفظ " + currentFile, "success");
+          }
+        }
+
+        function updateActiveTab(name) {
+          document.querySelectorAll(".ide-editor-tab").forEach((t) => {
+            t.classList.toggle("active", t.dataset.file === name);
+          });
+        }
+
+        function updateActiveSidebar(name) {
+          document.querySelectorAll(".ide-file-item").forEach((t) => {
+            t.classList.toggle("active", t.dataset.file === name);
+          });
+        }
+
+        function resetToDefault() {
+          if (
+            !confirm(
+              "هل تريد استعادة الملفات الافتراضية؟ سيتم فقدان التغييرات.",
+            )
+          )
+            return;
+          files = { ...DEFAULT_FILES };
+          localStorage.setItem(EDITOR_STORAGE_KEY, JSON.stringify(files));
+          if (editor) {
+            editor.setValue(files[currentFile] || "");
+            editor.clearHistory();
+          }
+          ideLog("🔄 تمت استعادة الملفات الافتراضية", "system");
+        }
+
+        // ===== SERIAL CONSOLE =====
+        function ideLog(msg, type = "info") {
+          const body = document.getElementById("ideConsoleBody");
+          if (!body) return;
+          if (consoleCollapsed) {
+            document.getElementById("ideConsoleCollapse")?.click();
+          }
+          const div = document.createElement("div");
+          div.className = `log-line ${type}`;
+          const now = new Date();
+          const ts = now.toLocaleTimeString();
+          div.textContent = `[${ts}] ${msg}`;
+          body.appendChild(div);
+          body.scrollTop = body.scrollHeight;
+        }
+        window._ideLog = ideLog;
+
+        function sendToSerial() {
+          const inp = document.getElementById("ideConsoleInput");
+          if (!inp || !inp.value.trim()) return;
+          const msg = inp.value.trim();
+          ideLog("→ " + msg, "send");
+          inp.value = "";
+          // Simulate response (in real app, this would go to a real serial port or Firebase)
+          setTimeout(() => {
+            if (msg === "AT") ideLog("OK", "success");
+            else if (msg.startsWith("status"))
+              ideLog("ESP32 Online | WiFi: Connected | Gate: Closed", "info");
+            else if (msg.startsWith("open"))
+              ideLog("✅ Gate opened", "success");
+            else if (msg.startsWith("close"))
+              ideLog("✅ Gate closed", "success");
+            else if (msg.startsWith("ping")) ideLog("pong", "success");
+            else if (msg.startsWith("help")) {
+              ideLog(
+                "— Commands: status, open, close, ping, AT, reset, otp=<code>, clear",
+                "system",
+              );
+            } else if (msg.startsWith("reset")) {
+              ideLog("🔄 ESP32 rebooting...", "warn");
+              setTimeout(() => ideLog("✅ ESP32 ready", "success"), 500);
+            } else if (msg.startsWith("otp=")) {
+              const code = msg.split("=")[1];
+              ideLog("🔑 OTP set: " + code, "info");
+            } else if (msg === "clear") {
+              document.getElementById("ideConsoleBody").innerHTML = "";
+            } else {
+              ideLog("⏎ " + msg + " (echo)", "system");
+            }
+          }, 300);
+        }
+
+        // ===== EXAMPLES =====
+        function openExamples() {
+          const grid = document.getElementById("ideExamplesGrid");
+          if (!grid) return;
+          grid.innerHTML = EXAMPLES.map(
+            (ex) => `
+        <div class="example-card" data-id="${ex.id}">
+          <span class="ex-icon">${ex.icon}</span>
+          <h4>${ex.name}</h4>
+          <p>${ex.desc}</p>
+        </div>
+      `,
+          ).join("");
+          document.getElementById("ideExamplesModal").classList.add("open");
+          grid.querySelectorAll(".example-card").forEach((card) => {
+            card.addEventListener("click", () => {
+              const ex = EXAMPLES.find((e) => e.id === card.dataset.id);
+              if (ex) {
+                files["sketch.ino"] = ex.code;
+                if (editor) editor.setValue(ex.code);
+                editor.clearHistory();
+                localStorage.setItem(EDITOR_STORAGE_KEY, JSON.stringify(files));
+                currentFile = "sketch.ino";
+                updateActiveTab("sketch.ino");
+                updateActiveSidebar("sketch.ino");
+                document
+                  .getElementById("ideExamplesModal")
+                  .classList.remove("open");
+                ideLog(`📂 تم تحميل مثال: ${ex.name}`, "success");
+              }
+            });
+          });
+        }
+
+        function openTemplates() {
+          const grid = document.getElementById("ideTemplatesGrid");
+          if (!grid) return;
+          grid.innerHTML = TEMPLATES.map(
+            (t) => `
+        <div class="template-card" data-id="${t.id}">
+          <div class="tmpl-icon">${t.icon}</div>
+          <h4>${t.name}</h4>
+        </div>
+      `,
+          ).join("");
+          document.getElementById("ideTemplatesModal").classList.add("open");
+          grid.querySelectorAll(".template-card").forEach((card) => {
+            card.addEventListener("click", () => {
+              const tmpl = TEMPLATES.find((t) => t.id === card.dataset.id);
+              if (tmpl) {
+                const pos = editor.getCursor();
+                editor.replaceRange("\n" + tmpl.code + "\n", pos);
+                document
+                  .getElementById("ideTemplatesModal")
+                  .classList.remove("open");
+                ideLog(`📝 تم إدراج قالب: ${tmpl.name}`, "success");
+              }
+            });
+          });
+        }
+
+        function openPinout() {
+          const board = document.getElementById("ideBoardSelect").value;
+          const data = BOARD_PINOUTS[board];
+          if (!data) return;
+          document.getElementById("idePinoutTitle").textContent = data.title;
+          const body = document.getElementById("idePinoutBody");
+          const half = Math.ceil(data.pins.length / 2);
+          body.innerHTML = `
+        <div class="pinout-container">
+          <div class="pinout-col">
+            <h4><i class="fas fa-plug"></i> الأطراف (1)</h4>
+            <div class="pinout-grid">
+              ${data.pins
+                .slice(0, half)
+                .map(
+                  (p) => `
+                <div class="pinout-item">
+                  <span class="pin-num">${p.num}</span>
+                  <span class="pin-func">${p.func}</span>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>
+          <div class="pinout-col">
+            <h4><i class="fas fa-plug"></i> الأطراف (2)</h4>
+            <div class="pinout-grid">
+              ${data.pins
+                .slice(half)
+                .map(
+                  (p) => `
+                <div class="pinout-item">
+                  <span class="pin-num">${p.num}</span>
+                  <span class="pin-func">${p.func}</span>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>
+        </div>
+      `;
+          document.getElementById("idePinoutModal").classList.add("open");
+        }
+
+        // ===== VERIFY =====
+        function verifyCode() {
+          const code = editor ? editor.getValue() : "";
+          let issues = [];
+          if (!code.includes("setup()"))
+            issues.push("⚠️ دالة setup() غير موجودة");
+          if (!code.includes("loop()"))
+            issues.push("⚠️ دالة loop() غير موجودة");
+          if (code.includes("WiFi.h") && !code.includes("WiFi.begin"))
+            issues.push("⚠️ تستخدم WiFi ولكن لم تستدعي WiFi.begin()");
+          if (
+            code.includes("Firebase_ESP_Client.h") &&
+            !code.includes("Firebase.begin")
+          )
+            issues.push("⚠️ تستخدم Firebase ولكن لم تستدعي Firebase.begin()");
+          if (code.includes("LiquidCrystal_I2C") && !code.includes(".init()"))
+            issues.push("⚠️ تستخدم LCD ولكن لم تستدعي .init()");
+          if (
+            code.includes("Adafruit_PWMServoDriver") &&
+            !code.includes("pwm.begin")
+          )
+            issues.push("⚠️ تستخدم PCA9685 ولكن لم تستدعي .begin()");
+
+          if (issues.length === 0) {
+            ideLog("✅ التحقق: لا توجد مشاكل في الكود!", "success");
+          } else {
+            issues.forEach((i) => ideLog(i, "warn"));
+            ideLog(`⚠️ تم العثور على ${issues.length} مشكلة`, "warn");
+          }
+        }
+
+        // ===== DOWNLOAD =====
+        function downloadSketch() {
+          const code = editor ? editor.getValue() : "";
+          const blob = new Blob([code], { type: "text/plain" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = currentFile || "sketch.ino";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          ideLog(`📥 تم تنزيل ${currentFile}`, "success");
+        }
+
+        // ===== FORMAT =====
+        function formatCode() {
+          if (!editor) return;
+          const code = editor.getValue();
+          // Simple formatting: fix indentation
+          const lines = code.split("\n");
+          let indent = 0;
+          const formatted = lines
+            .map((line) => {
+              const trimmed = line.trim();
+              if (trimmed.startsWith("}") || trimmed.startsWith(")"))
+                indent = Math.max(0, indent - 1);
+              const out = "  ".repeat(indent) + trimmed;
+              if (trimmed.endsWith("{") || trimmed.endsWith("(")) indent++;
+              return out;
+            })
+            .join("\n");
+          editor.setValue(formatted);
+          ideLog("🎨 تم تنسيق الكود", "success");
+        }
+
+        // ===== FULLSCREEN =====
+        function toggleFullscreen() {
+          const container = document.querySelector(".ide-container");
+          if (!container) return;
+          if (!isFullscreen) {
+            container.style.position = "fixed";
+            container.style.inset = "0";
+            container.style.zIndex = "1000";
+            container.style.height = "100vh";
+            container.style.backgroundColor = "var(--bg)";
+            isFullscreen = true;
+            document.getElementById("ideFullscreenBtn").innerHTML =
+              '<i class="fas fa-compress"></i>';
+            setTimeout(() => editor && editor.refresh(), 100);
+          } else {
+            container.style.position = "";
+            container.style.inset = "";
+            container.style.zIndex = "";
+            container.style.height = "";
+            container.style.backgroundColor = "";
+            isFullscreen = false;
+            document.getElementById("ideFullscreenBtn").innerHTML =
+              '<i class="fas fa-expand"></i>';
+            setTimeout(() => editor && editor.refresh(), 100);
+          }
+        }
+
+        // ===== INIT EVENTS =====
+        document.addEventListener("DOMContentLoaded", () => {
+          // Wait a tick for CodeMirror to load
+          setTimeout(() => {
+            initEditor();
+
+            // Tab clicks
+            document.querySelectorAll(".ide-editor-tab").forEach((tab) => {
+              tab.addEventListener("click", () => loadFile(tab.dataset.file));
+            });
+            document.querySelectorAll(".ide-file-item").forEach((item) => {
+              item.addEventListener("click", () => loadFile(item.dataset.file));
+            });
+
+            // Toolbar buttons
+            document
+              .getElementById("ideVerifyBtn")
+              ?.addEventListener("click", verifyCode);
+            document
+              .getElementById("ideDownloadBtn")
+              ?.addEventListener("click", downloadSketch);
+            document
+              .getElementById("ideExamplesBtn")
+              ?.addEventListener("click", openExamples);
+            document
+              .getElementById("ideTemplatesBtn")
+              ?.addEventListener("click", openTemplates);
+            document
+              .getElementById("idePinoutBtn")
+              ?.addEventListener("click", openPinout);
+            document
+              .getElementById("ideUndoBtn")
+              ?.addEventListener("click", () => editor && editor.undo());
+            document
+              .getElementById("ideRedoBtn")
+              ?.addEventListener("click", () => editor && editor.redo());
+            document
+              .getElementById("ideFormatBtn")
+              ?.addEventListener("click", formatCode);
+            document
+              .getElementById("ideFullscreenBtn")
+              ?.addEventListener("click", toggleFullscreen);
+            document
+              .getElementById("ideNewFileBtn")
+              ?.addEventListener("click", () => {
+                const name = prompt("اسم الملف الجديد (مثال: sensor.h):");
+                if (name && !files[name]) {
+                  files[name] = "// " + name + "\n";
+                  localStorage.setItem(
+                    EDITOR_STORAGE_KEY,
+                    JSON.stringify(files),
+                  );
+                  // Add tab
+                  const tabs = document.getElementById("ideEditorTabs");
+                  const tab = document.createElement("div");
+                  tab.className = "ide-editor-tab active";
+                  tab.dataset.file = name;
+                  tab.innerHTML = `📄 ${name} <span class="tab-close" data-file="${name}">✕</span>`;
+                  tabs.appendChild(tab);
+                  tab.addEventListener("click", () => loadFile(name));
+                  tab
+                    .querySelector(".tab-close")
+                    .addEventListener("click", (e) => {
+                      e.stopPropagation();
+                      if (confirm(`حذف ${name}؟`)) {
+                        delete files[name];
+                        localStorage.setItem(
+                          EDITOR_STORAGE_KEY,
+                          JSON.stringify(files),
+                        );
+                        tab.remove();
+                        const sidebarItem = document.querySelector(
+                          `.ide-file-item[data-file="${name}"]`,
+                        );
+                        if (sidebarItem) sidebarItem.remove();
+                        if (currentFile === name) loadFile("sketch.ino");
+                      }
+                    });
+                  // Add sidebar item
+                  const fileList = document.getElementById("ideFileList");
+                  const item = document.createElement("div");
+                  item.className = "ide-file-item active";
+                  item.dataset.file = name;
+                  item.innerHTML = `<span class="file-icon">📄</span>${name}`;
+                  fileList.appendChild(item);
+                  item.addEventListener("click", () => loadFile(name));
+                  loadFile(name);
+                } else if (name) {
+                  alert("الملف موجود مسبقاً");
+                }
+              });
+
+            // Console
+            document
+              .getElementById("ideConsoleSendBtn")
+              ?.addEventListener("click", sendToSerial);
+            document
+              .getElementById("ideConsoleInput")
+              ?.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") sendToSerial();
+              });
+            document
+              .getElementById("ideConsoleClear")
+              ?.addEventListener("click", () => {
+                document.getElementById("ideConsoleBody").innerHTML = "";
+                ideLog("🗑️ تم مسح السجل", "system");
+              });
+            document
+              .getElementById("ideConsoleCollapse")
+              ?.addEventListener("click", function () {
+                const body = document.getElementById("ideConsoleBody");
+                const row = document.querySelector(".ide-console-input-row");
+                if (consoleCollapsed) {
+                  body.style.display = "";
+                  row.style.display = "";
+                  this.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                } else {
+                  body.style.display = "none";
+                  row.style.display = "none";
+                  this.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                }
+                consoleCollapsed = !consoleCollapsed;
+              });
+
+            // Board change -> update pinout if modal is open
+            document
+              .getElementById("ideBoardSelect")
+              ?.addEventListener("change", () => {
+                if (
+                  document
+                    .getElementById("idePinoutModal")
+                    .classList.contains("open")
+                )
+                  openPinout();
+              });
+
+            // Modals close
+            document.querySelectorAll(".close-modal").forEach((btn) => {
+              btn.addEventListener("click", () => {
+                btn.closest(".ide-modal-overlay").classList.remove("open");
+              });
+            });
+            document
+              .querySelectorAll(".ide-modal-overlay")
+              .forEach((overlay) => {
+                overlay.addEventListener("click", (e) => {
+                  if (e.target === overlay) overlay.classList.remove("open");
+                });
+              });
+
+            // Keyboard shortcuts
+            document.addEventListener("keydown", (e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                e.preventDefault();
+                saveCurrentFile();
+              }
+              if (
+                (e.ctrlKey || e.metaKey) &&
+                e.key === "Enter" &&
+                document.querySelector("#embedded_tools.section.active")
+              ) {
+                e.preventDefault();
+                document.getElementById("ideUploadBtn")?.click();
+              }
+            });
+
+            ideLog("🚀 Arduino IDE جاهز للاستخدام", "success");
+            ideLog(`📋 ${Object.keys(files).length} ملفات محملة`, "info");
+          }, 500);
+        });
+      })();
+
+      // Mobile sidebar toggle
+      document.addEventListener("DOMContentLoaded", () => {
+        const toggleBtn = document.getElementById("mobileMenuToggle");
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+
+        if (toggleBtn && sidebar) {
+          const toggleSidebar = () => {
+            sidebar.classList.toggle("open");
+            if (overlay) overlay.classList.toggle("open");
+          };
+
+          toggleBtn.addEventListener("click", toggleSidebar);
+          if (overlay) overlay.addEventListener("click", toggleSidebar);
+
+          // Close sidebar on nav item click (mobile)
+          document.querySelectorAll(".nav-item").forEach((item) => {
+            item.addEventListener("click", () => {
+              if (window.innerWidth <= 900) {
+                sidebar.classList.remove("open");
+                if (overlay) overlay.classList.remove("open");
+              }
+            });
+          });
+        }
+
+        // Occupancy chart
+        const canvas = document.getElementById("occupancyChart");
+        if (canvas && typeof Chart !== "undefined") {
+          const ctx = canvas.getContext("2d");
+          window._occChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels: ["متاح", "مشغول", "محجوز"],
+              datasets: [
+                {
+                  data: [4, 0, 0],
+                  backgroundColor: [
+                    "rgba(16,185,129,0.7)",
+                    "rgba(239,68,68,0.7)",
+                    "rgba(245,158,11,0.7)",
+                  ],
+                  borderColor: [
+                    "rgb(16,185,129)",
+                    "rgb(239,68,68)",
+                    "rgb(245,158,11)",
+                  ],
+                  borderWidth: 2,
+                  hoverOffset: 10,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: "68%",
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: {
+                    color: "#94a3b8",
+                    font: { family: "Cairo", size: 12 },
+                    padding: 16,
+                    usePointStyle: true,
+                  },
+                },
+              },
+              animation: { animateRotate: true, duration: 1500 },
+            },
+          });
+        }
+      });
+    </script>
+
+    <script>
+      // ================================================================
+      // ===== Web Serial API - COM port + ESP32 Flasher (esptool-js) =====
+      // ================================================================
+      (function () {
+        let serialPort = null;
+        let serialReader = null;
+        let serialConnected = false;
+        let selectedBinary = null;
+
+        function sLog(msg, t) {
+          if (window._ideLog) window._ideLog(msg, t);
+        }
+
+        // === TRANSPORT WRAPPER FOR ESPTOOL-JS ===
+        class WebSerialTransport {
+          constructor(port) {
+            this.port = port;
+          }
+          async connect(baud) {
+            await this.port.open({ baudRate: baud });
+            this.reader = this.port.readable.getReader();
+            this.writer = this.port.writable.getWriter();
+          }
+          async write(data) {
+            await this.writer.write(data);
+          }
+          async read(count) {
+            const chunks = [];
+            while (chunks.length < count) {
+              const { value, done } = await this.reader.read();
+              if (done) throw new Error("Port disconnected");
+              chunks.push(value);
+            }
+            return chunks;
+          }
+          async setRTS(v) {
+            try {
+              await this.port.setSignals({ requestToSend: v });
+            } catch (_) {}
+          }
+          async setDTR(v) {
+            try {
+              await this.port.setSignals({ dataTerminalReady: v });
+            } catch (_) {}
+          }
+          async disconnect() {
+            if (this.reader) {
+              try {
+                await this.reader.cancel();
+              } catch (_) {}
+            }
+            if (this.writer) {
+              try {
+                await this.writer.close();
+              } catch (_) {}
+            }
+            try {
+              await this.port.close();
+            } catch (_) {}
+          }
+        }
+
+        // === SCAN PORTS ===
+        async function scanPorts() {
+          const sel = document.getElementById("idePortSelect");
+          if (!sel) return;
+          if (!navigator.serial) {
+            sel.innerHTML = '<option value="">❌ Chrome/Edge فقط</option>';
+            return;
+          }
+          try {
+            const ports = await navigator.serial.getPorts();
+            sel.innerHTML = '<option value="">🔌 منفذ</option>';
+            ports.forEach((port, i) => {
+              const info = port.getInfo();
+              const label = info.usbProductId
+                ? `USB ${info.usbVendorId.toString(16)}:${info.usbProductId.toString(16)}`
+                : `منفذ #${i + 1}`;
+              const opt = document.createElement("option");
+              opt.value = i;
+              opt.textContent = label;
+              sel.appendChild(opt);
+            });
+            sLog(`🔍 ${ports.length} منفذ`, "info");
+          } catch (e) {
+            sLog("❌ " + e.message, "error");
+          }
+        }
+
+        // === CONNECT ===
+        async function requestAndConnect() {
+          if (!navigator.serial) {
+            sLog("❌ استخدم Chrome/Edge", "error");
+            return;
+          }
+          try {
+            serialPort = await navigator.serial.requestPort();
+            await serialPort.open({ baudRate: 115200 });
+            serialConnected = true;
+            sLog("✅ متصل (بسرعة 115200)", "success");
+            updateSerialUI(true);
+            startRead();
+          } catch (e) {
+            if (e.name !== "NotFoundError") sLog("❌ " + e.message, "error");
+          }
+        }
+
+        // === DISCONNECT ===
+        async function disconnectSerial() {
+          if (serialReader) {
+            try {
+              await serialReader.cancel();
+            } catch (_) {}
+            serialReader = null;
+          }
+          if (serialPort) {
+            try {
+              await serialPort.close();
+            } catch (_) {}
+            serialPort = null;
+          }
+          serialConnected = false;
+          updateSerialUI(false);
+          sLog("🔌 قطع الاتصال", "system");
+        }
+
+        function updateSerialUI(connected) {
+          const btn = document.getElementById("idePortConnectBtn");
+          if (btn)
+            btn.innerHTML = connected
+              ? '<i class="fas fa-power-off" style="color:var(--green)"></i>'
+              : '<i class="fas fa-plug"></i>';
+          const status = document.getElementById("ideConsoleStatus");
+          if (status) status.textContent = connected ? "🟢 متصل" : "— غير متصل";
+          document.getElementById("ideChipInfoBtn").disabled = !connected;
+          document.getElementById("ideFlashBtn").disabled =
+            !connected || !selectedBinary;
+        }
+
+        // === SERIAL READ ===
+        async function startRead() {
+          if (!serialPort?.readable) return;
+          const decoder = new TextDecoder();
+          serialReader = serialPort.readable.getReader();
+          try {
+            while (true) {
+              const { value, done } = await serialReader.read();
+              if (done) break;
+              if (value) {
+                const text = decoder.decode(value);
+                text
+                  .split("\n")
+                  .filter((l) => l.trim())
+                  .forEach((l) => sLog(l.trim(), "info"));
+              }
+            }
+          } catch (e) {
+            if (e.name !== "CancelError" && serialConnected)
+              sLog("⚠️ " + e.message, "warn");
+          } finally {
+            serialReader.releaseLock();
+            serialReader = null;
+            if (serialConnected) {
+              serialConnected = false;
+              updateSerialUI(false);
+              sLog("🔌 انقطع", "system");
+            }
+          }
+        }
+
+        // === SEND TEXT COMMAND ===
+        async function sendCmd(cmd) {
+          if (!serialConnected || !serialPort?.writable) return false;
+          try {
+            const w = serialPort.writable.getWriter();
+            await w.write(new TextEncoder().encode(cmd + "\n"));
+            w.releaseLock();
+            return true;
+          } catch (_) {
+            return false;
+          }
+        }
+
+        // === DETECT CHIP (esptool-js) ===
+        async function detectChip() {
+          if (!serialConnected || !serialPort) {
+            sLog("❌ وصل أولاً", "error");
+            return;
+          }
+          sLog("🔍 جاري اكتشاف الشيب...", "info");
+          try {
+            sLog(
+              "⏳ خلّي الـ ESP32 في وضع التحميل (اضغط BOOT + RESET)",
+              "warn",
+            );
+            const esptool =
+              await import("https://cdn.jsdelivr.net/npm/esptool-js/lib/index.js");
+            const transport = new WebSerialTransport(serialPort);
+            await transport.disconnect();
+            const loader = new esptool.ESPLoader(transport, 115200);
+            await loader.connect();
+            const info = await loader.getChipInfo();
+            sLog(`✅ الشيب: ${info.chipDescription || "ESP32"}`, "success");
+            sLog(`📌 MAC: ${info.chipMac || "--"}`, "info");
+            sLog(`💾 Flash: ${info.flashSize || "--"}`, "info");
+            document.getElementById("ideChipInfoBtn").innerHTML =
+              `<i class="fas fa-check-circle" style="color:var(--green)"></i>`;
+            await transport.disconnect();
+          } catch (e) {
+            sLog(`❌ فشل: ${e.message}`, "error");
+            sLog(
+              "💡 ضع ESP32 في وضع التحميل: اضغط BOOT → RESET → اترك BOOT",
+              "system",
+            );
+          }
+        }
+
+        // === FLASH ESP32 ===
+        async function flashESP32() {
+          if (!serialConnected || !serialPort) {
+            sLog("❌ وصل أولاً", "error");
+            return;
+          }
+          if (!selectedBinary) {
+            sLog("❌ اختر ملف .bin أولاً", "error");
+            return;
+          }
+
+          sLog("⚡ جاري برمجة ESP32...", "info");
+          sLog("⏳ تأكد أن ESP32 في وضع التحميل (BOOT + RESET)", "warn");
+
+          try {
+            const esptool =
+              await import("https://cdn.jsdelivr.net/npm/esptool-js/lib/index.js");
+            const transport = new WebSerialTransport(serialPort);
+            await transport.disconnect();
+            const loader = new esptool.ESPLoader(transport, 115200);
+
+            // Get chip info
+            await loader.connect();
+            const info = await loader.getChipInfo();
+            sLog(
+              `✅ ${info.chipDescription || "ESP32"} - جاري المسح والكتابة...`,
+              "success",
+            );
+
+            // Erase flash
+            sLog("🧹 جاري مسح الفلاش...", "info");
+            await loader.eraseFlash();
+            sLog("✅ تم المسح", "success");
+
+            // Write firmware at appropriate offset
+            const offset = 0x10000; // ESP32 app offset
+            sLog(
+              `📝 جاري كتابة ${(selectedBinary.byteLength / 1024).toFixed(1)} KB عند 0x${offset.toString(16)}...`,
+              "info",
+            );
+            await loader.flashData(selectedBinary, offset);
+
+            sLog("✅ تمت البرمجة بنجاح!", "success");
+            sLog("🔄 إعادة تشغيل ESP32...", "info");
+
+            // Reset ESP32 to run new firmware
+            await transport.setDTR(false);
+            await transport.setRTS(true);
+            await new Promise((r) => setTimeout(r, 100));
+            await transport.setRTS(false);
+
+            await transport.disconnect();
+            document.getElementById("ideChipInfoBtn").innerHTML =
+              '<i class="fas fa-microchip"></i>';
+            sLog("🚀 ESP32 يعمل الآن بالكود الجديد!", "success");
+          } catch (e) {
+            sLog(`❌ فشل البرمجة: ${e.message}`, "error");
+            sLog("💡 حاول مرة أخرى: BOOT + RESET، ثم اختر الفلاش", "system");
+          }
+        }
+
+        // === INIT ===
+        document.addEventListener("DOMContentLoaded", () => {
+          // Connect/Disconnect
+          document
+            .getElementById("idePortConnectBtn")
+            ?.addEventListener("click", async () => {
+              serialConnected
+                ? await disconnectSerial()
+                : await requestAndConnect();
+            });
+          // Refresh ports
+          document
+            .getElementById("idePortRefreshBtn")
+            ?.addEventListener("click", scanPorts);
+          // Detect chip
+          document
+            .getElementById("ideChipInfoBtn")
+            ?.addEventListener("click", detectChip);
+          // File selection
+          document
+            .getElementById("ideBinFile")
+            ?.addEventListener("change", (e) => {
+              const file = e.target.files?.[0];
+              if (!file) {
+                selectedBinary = null;
+                document.getElementById("ideFlashBtn").disabled = true;
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = () => {
+                selectedBinary = new Uint8Array(reader.result);
+                document.getElementById("ideFlashBtn").disabled =
+                  !serialConnected;
+                document.getElementById("ideBinLabel").textContent =
+                  `📄 ${file.name.slice(0, 15)}`;
+                sLog(
+                  `📁 تم اختيار ${file.name} (${(selectedBinary.byteLength / 1024).toFixed(1)} KB)`,
+                  "success",
+                );
+              };
+              reader.readAsArrayBuffer(file);
+            });
+          // Flash
+          document
+            .getElementById("ideFlashBtn")
+            ?.addEventListener("click", flashESP32);
+          // Compile button
+          document
+            .getElementById("ideCompileBtn")
+            ?.addEventListener("click", async (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              const button = event.currentTarget;
+              if (button) button.disabled = true;
+
+              const code = window._editor?.getValue();
+              if (!code) {
+                sLog("❌ الكود فارغ", "error");
+                if (button) button.disabled = false;
+                return;
+              }
+
+              sLog("🔨 جاري الترجمة على السيرفر...", "info");
+
+              // Use AbortController for timeout management (180 seconds for compilation)
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 180000);
+
+              try {
+                const boardFqbn =
+                  document.getElementById("ideBoardSelect").value === "esp32"
+                    ? "esp32:esp32:esp32"
+                    : "esp32:esp32:esp32";
+
+                sLog(`📤 إرسال الكود للسيرفر على localhost:3001...`, "system");
+
+                const resp = await fetch("http://localhost:3001/compile", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                  },
+                  body: JSON.stringify({ code, boardFqbn }),
+                  signal: controller.signal,
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!resp.ok) {
+                  const errText = await resp.text();
+                  sLog(`❌ خطأ HTTP ${resp.status}: ${errText}`, "error");
+                  return;
+                }
+
+                const result = await resp.json();
+
+                if (result.success) {
+                  sLog(
+                    `✅ تمت الترجمة بنجاح! (${(result.size / 1024).toFixed(1)} KB)`,
+                    "success",
+                  );
+                  // Auto-fill the .bin file for flashing
+                  const binBytes = Uint8Array.from(atob(result.binary), (c) =>
+                    c.charCodeAt(0),
+                  );
+                  selectedBinary = binBytes;
+                  document.getElementById("ideFlashBtn").disabled =
+                    !serialConnected;
+                  document.getElementById("ideBinLabel").textContent =
+                    `🆕 ${result.fileName}`;
+                  sLog(`💡 الـ binary جاهز! اضغط ⚡ لفلشه للـ ESP32`, "info");
+                } else {
+                  sLog(`❌ فشلت الترجمة`, "error");
+                  if (result.error) {
+                    result.error
+                      ?.split("\n")
+                      .filter((l) => l.trim())
+                      .slice(-5)
+                      .forEach((l) => sLog(l, "error"));
+                  } else {
+                    sLog("(لا توجد تفاصيل خطأ)", "system");
+                  }
+                }
+              } catch (e) {
+                clearTimeout(timeoutId);
+                if (e.name === "AbortError") {
+                  sLog(`⏱️ انتهت مهلة الترجمة (180 ثانية)`, "error");
+                } else if (
+                  e instanceof TypeError &&
+                  e.message.includes("Failed to fetch")
+                ) {
+                  sLog(`❌ فشل الاتصال بالسيرفر على localhost:3001`, "error");
+                  sLog(
+                    "🔍 تأكد من: 1) تشغيل سيرفر (cd server && npm start)",
+                    "system",
+                  );
+                  sLog("2) عدم حجب localhost:3001 بواسطة جدار حماية", "system");
+                } else {
+                  sLog(`❌ خطأ: ${e.message}`, "error");
+                }
+              } finally {
+                clearTimeout(timeoutId);
+                if (button) button.disabled = false;
+              }
+            });
+          // Also save code to Firebase when cloud button clicked
+          document
+            .getElementById("ideUploadBtn")
+            ?.addEventListener("click", async () => {
+              const code = window._editor?.getValue();
+              if (!code) {
+                sLog("❌ الكود فارغ", "error");
+                return;
+              }
+              const fb = window.__fb;
+              if (fb) {
+                try {
+                  sLog("☁️ جاري رفع الكود إلى Firebase...", "info");
+                  const board = document.getElementById("ideBoardSelect").value;
+                  const boardName =
+                    document.getElementById("ideBoardSelect").options[
+                      document.getElementById("ideBoardSelect").selectedIndex
+                    ].text;
+                  await fb.set(fb.ref(fb.db, "arduino_ide/latest_code"), {
+                    code,
+                    board,
+                    boardName,
+                    timestamp: Date.now(),
+                    uploadedBy: "admin",
+                  });
+                  const vk = `CODE_${Date.now()}`;
+                  await fb.set(fb.ref(fb.db, `arduino_ide/versions/${vk}`), {
+                    code,
+                    board,
+                    boardName,
+                    timestamp: Date.now(),
+                  });
+                  await fb.set(fb.ref(fb.db, "commands/uploadNewCode"), {
+                    active: true,
+                    board,
+                    versionKey: vk,
+                    timestamp: Date.now(),
+                  });
+                  sLog(
+                    "✅ تم رفع الكود إلى Firebase — OTA جاهز للـ ESP32",
+                    "success",
+                  );
+                } catch (e) {
+                  sLog("❌ " + e.message, "error");
+                }
+              } else {
+                sLog("⚠️ Firebase غير متاح", "warn");
+              }
+            });
+          setTimeout(scanPorts, 1500);
+        });
+
+        window._serial = {
+          connect: requestAndConnect,
+          disconnect: disconnectSerial,
+          detect: detectChip,
+          flash: flashESP32,
+          scan: scanPorts,
+          sendCmd: sendCmd,
+        };
+      })();
+    </script>
+
+    <script type="module" src="./admin.js"></script>
+  </body>
 </html>
