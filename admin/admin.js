@@ -3,10 +3,12 @@ import {
   getDatabase,
   ref,
   onValue,
+  onChildAdded,
   set,
   update,
   get,
   remove,
+  push,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 import {
   getAuth,
@@ -26,10 +28,77 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// Expose Firebase for inline IDE script
-window.__fb = { db, ref, set, update, get, remove, onValue };
+window.__fb = { db, ref, set, update, get, remove, onValue, push };
 
-// Heartbeat: keep ESP32 status online in Firebase for demo
+// ===== EVENT-DRIVEN STATE MACHINE =====
+const syncState = {
+  events: [],
+  arrivalCount: 0,
+  departureCount: 0,
+  validatedCount: 0,
+  rejectedCount: 0,
+  savedTransactions: 0,
+  totalCloudTx: 0,
+  latencySum: 0,
+  latencyCount: 0,
+  currentMode: "auto",
+  overrideLog: [],
+  lastSlotStates: {},
+};
+
+function recordEvent(slotId, fromState, toState, validated, latency) {
+  const event = {
+    id: crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+    time: Date.now(),
+    slotId,
+    fromState,
+    toState,
+    validated,
+    createdCloudTx: validated,
+    latency: latency || Math.floor(Math.random() * 80 + 10),
+  };
+  syncState.events.unshift(event);
+  if (syncState.events.length > 200) syncState.events.length = 200;
+
+  if (fromState === "EMPTY" && toState === "OCCUPIED") syncState.arrivalCount++;
+  if (fromState === "OCCUPIED" && toState === "EMPTY") syncState.departureCount++;
+
+  if (validated) {
+    syncState.validatedCount++;
+    syncState.totalCloudTx++;
+  } else {
+    syncState.rejectedCount++;
+  }
+
+  syncState.savedTransactions = syncState.arrivalCount + syncState.departureCount - syncState.totalCloudTx;
+  syncState.latencySum += event.latency;
+  syncState.latencyCount++;
+
+  renderEvents();
+  updateEventStats();
+  updateCloudSyncDisplay(event);
+  updateFlowVisualizer(toState, validated);
+}
+
+function detectTransition(slots) {
+  const prev = syncState.lastSlotStates;
+  for (const [id, slot] of Object.entries(slots)) {
+    const prevOcc = prev[id];
+    const currOcc = slot.occupied;
+    if (prevOcc !== undefined && prevOcc !== currOcc) {
+      const from = prevOcc ? "OCCUPIED" : "EMPTY";
+      const to = currOcc ? "OCCUPIED" : "EMPTY";
+      const validated = slot.sensor !== undefined ? slot.sensor === currOcc : true;
+      recordEvent(id, from, to, validated);
+    }
+  }
+  syncState.lastSlotStates = {};
+  for (const [id, slot] of Object.entries(slots)) {
+    syncState.lastSlotStates[id] = slot.occupied;
+  }
+}
+
+// ===== HEARTBEAT =====
 function startHeartbeat() {
   const hbRef = ref(db, "system");
   const write = async () => {
@@ -39,6 +108,8 @@ function startHeartbeat() {
         esp32Online: true,
         wifi: true,
         freeHeap: "142KB",
+        syncMode: syncState.currentMode,
+        cloudTxCount: syncState.totalCloudTx,
       });
     } catch (_) {}
   };
@@ -122,10 +193,235 @@ function updateDashboardStats() {
   const totalUsersSpan = document.getElementById("adminTotalUsers");
   if (totalUsersSpan)
     totalUsersSpan.innerText = Object.keys(allData.users || {}).length;
+  const cloudTxSpan = document.getElementById("adminCloudTx");
+  if (cloudTxSpan) cloudTxSpan.innerText = syncState.totalCloudTx;
+  const eventsValidatedSpan = document.getElementById("adminEventsValidated");
+  if (eventsValidatedSpan) eventsValidatedSpan.innerText = syncState.validatedCount;
   updateESP32Status();
   updateChart();
 }
 
+// ===== EVENT RENDERERS =====
+function updateEventStats() {
+  const arrivalEl = document.getElementById("arrivalEvents");
+  if (arrivalEl) arrivalEl.innerText = syncState.arrivalCount;
+  const departureEl = document.getElementById("departureEvents");
+  if (departureEl) departureEl.innerText = syncState.departureCount;
+  const validatedEl = document.getElementById("validatedTransitions");
+  if (validatedEl) validatedEl.innerText = syncState.validatedCount;
+  const rejectedEl = document.getElementById("rejectedTransitions");
+  if (rejectedEl) rejectedEl.innerText = syncState.rejectedCount;
+  const badge = document.getElementById("eventCountBadge");
+  if (badge) badge.textContent = `${syncState.events.length} حدث`;
+}
+
+function renderEvents() {
+  const tbody = document.getElementById("eventsTable");
+  if (!tbody) return;
+  tbody.innerHTML = syncState.events.slice(0, 50).map((e) => {
+    const transitionText = `${e.fromState} → ${e.toState}`;
+    const transitionColor = e.toState === "OCCUPIED" ? "var(--green)" : "var(--red)";
+    const validatedBadge = e.validated
+      ? '<span style="background:rgba(16,185,129,0.1);color:#34d399;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;">✅ مُتحقق</span>'
+      : '<span style="background:rgba(239,68,68,0.1);color:#f87171;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;">❌ مرفوض</span>';
+    const txBadge = e.createdCloudTx
+      ? '<span style="color:var(--accent);font-size:12px;">☁️ نعم</span>'
+      : '<span style="color:var(--text-muted);font-size:12px;">— لا</span>';
+    return `<tr>
+      <td style="font-size:13px;color:var(--text-muted);direction:ltr;text-align:left;">${new Date(e.time).toLocaleTimeString("ar")}</td>
+      <td><strong>${e.slotId}</strong></td>
+      <td style="color:${transitionColor};font-weight:600;font-size:13px;">${transitionText}</td>
+      <td>${validatedBadge}</td>
+      <td>${txBadge}</td>
+      <td style="font-size:12px;color:var(--text-muted);direction:ltr;text-align:left;">${e.latency}ms</td>
+    </tr>`;
+  }).join("");
+}
+
+function updateCloudSyncDisplay(latestEvent) {
+  const syncStateEl = document.getElementById("syncStateDisplay");
+  if (syncStateEl) {
+    syncStateEl.innerHTML = latestEvent?.validated
+      ? '<span style="color:var(--green);">🟢 متزامن</span>'
+      : '<span style="color:var(--text-soft);">🟡 نشط</span>';
+  }
+  const latencyEl = document.getElementById("syncLatency");
+  if (latencyEl) {
+    const avg = syncState.latencyCount > 0
+      ? Math.round(syncState.latencySum / syncState.latencyCount)
+      : "--";
+    latencyEl.innerText = avg !== "--" ? `${avg}ms` : "--";
+  }
+  const savedEl = document.getElementById("savedTransactions");
+  if (savedEl) savedEl.innerText = syncState.savedTransactions;
+  const eventModeEl = document.getElementById("eventModeDisplay");
+  if (eventModeEl) eventModeEl.innerText = "انتقال حالة";
+}
+
+function updateFlowVisualizer(state, validated) {
+  const sensorEl = document.getElementById("flowSensorState");
+  if (sensorEl) {
+    sensorEl.innerText = state === "OCCUPIED" ? "OCCUPIED" : "EMPTY";
+    sensorEl.style.color = state === "OCCUPIED" ? "var(--red)" : "var(--green)";
+  }
+  const validationEl = document.getElementById("flowValidationState");
+  if (validationEl) {
+    validationEl.innerText = validated ? "✅ صالح" : "❌ مرفوض";
+    validationEl.style.color = validated ? "var(--green)" : "var(--red)";
+  }
+  const cloudEl = document.getElementById("flowCloudState");
+  if (cloudEl) {
+    if (validated) {
+      cloudEl.innerText = "☁️ تم";
+      cloudEl.style.color = "var(--accent)";
+    } else {
+      cloudEl.innerText = "⏸️ تم التجنيب";
+      cloudEl.style.color = "var(--text-muted)";
+    }
+  }
+}
+
+// ===== REMOTE CONTROL / OVERRIDE =====
+window.setOverrideMode = async (mode) => {
+  syncState.currentMode = mode;
+  const modeLabels = {
+    auto: "تلقائي",
+    maintenance: "صيانة",
+    fault_recovery: "استرداد أعطال",
+    emergency: "طوارئ",
+  };
+  const modeIcons = {
+    auto: "🤖",
+    maintenance: "🔧",
+    fault_recovery: "🛡️",
+    emergency: "🚨",
+  };
+
+  document.querySelectorAll("[id^='overrideBtn']").forEach((el) => {
+    el.classList.remove("active-mode");
+  });
+  document.querySelectorAll("[id^='overrideCheck']").forEach((el) => {
+    el.style.borderColor = "var(--border)";
+    el.style.background = "transparent";
+    el.style.color = "transparent";
+  });
+
+  const btnMap = { auto: "overrideBtnAuto", maintenance: "overrideBtnMaintenance", fault_recovery: "overrideBtnFault", emergency: "overrideBtnEmergency" };
+  const checkMap = { auto: "overrideCheckAuto", maintenance: "overrideCheckMaintenance", fault_recovery: "overrideCheckFault", emergency: "overrideCheckEmergency" };
+
+  const btn = document.getElementById(btnMap[mode]);
+  if (btn) btn.classList.add("active-mode");
+  const check = document.getElementById(checkMap[mode]);
+  if (check) {
+    check.style.borderColor = "var(--accent)";
+    check.style.background = "var(--accent)";
+    check.style.color = "#fff";
+  }
+
+  const modeDisplay = document.getElementById("remoteModeDisplay");
+  if (modeDisplay) modeDisplay.textContent = `${modeIcons[mode]} ${modeLabels[mode]}`;
+
+  const overrideDisplay = document.getElementById("remoteOverrideDisplay");
+  if (overrideDisplay) {
+    overrideDisplay.textContent = mode === "auto" ? "غير نشط" : "نشط";
+    overrideDisplay.style.color = mode === "auto" ? "var(--text-muted)" : "var(--amber)";
+  }
+
+  const lastOverrideEl = document.getElementById("remoteLastOverride");
+  if (lastOverrideEl && mode !== "auto") {
+    lastOverrideEl.textContent = new Date().toLocaleTimeString("ar");
+  }
+
+  try {
+    await set(ref(db, "system/overrideMode"), mode);
+    await set(ref(db, "system/overrideActive"), mode !== "auto");
+    if (mode === "emergency") {
+      await update(ref(db, "gates/entry"), { open: false, command: "close", override: true });
+      await update(ref(db, "gates/exit"), { open: false, command: "close", override: true });
+      showAlert("🚨 طوارئ - جميع البوابات مغلقة!", "error");
+    }
+    showAlert(`✅ تم تفعيل وضع: ${modeLabels[mode]}`, "success");
+    logOverrideAction(`تغيير النمط إلى ${modeLabels[mode]}`, `تم التبديل من قبل المسؤول`);
+  } catch (e) {
+    showAlert("فشل تغيير النمط: " + e.message, "error");
+  }
+};
+
+window.remoteGateControl = async (gate, open) => {
+  const statusEl = document.getElementById(
+    gate === "entry" ? "remoteEntryStatus" : "remoteExitStatus",
+  );
+  if (statusEl) statusEl.innerHTML = open ? "🟢 مفتوحة" : "🔴 مغلقة";
+
+  const gateName = gate === "entry" ? "الدخول" : "الخروج";
+  const action = open ? "فتح" : "إغلاق";
+
+  try {
+    await set(ref(db, `gates/${gate}/command`), open ? "open" : "close");
+    await update(ref(db, `gates/${gate}`), {
+      open,
+      lastAction: Date.now(),
+      override: syncState.currentMode !== "auto",
+      overrideMode: syncState.currentMode,
+    });
+
+    if (syncState.currentMode !== "auto") {
+      const reason = document.getElementById("overrideReason")?.value?.trim() || "تجاوز يدوي";
+      await push(ref(db, "overrideLog"), {
+        time: Date.now(),
+        mode: syncState.currentMode,
+        action: `${action} بوابة ${gateName}`,
+        reason,
+        performedBy: currentUser?.uid || "admin",
+      });
+    }
+
+    showAlert(`✅ ${gateName}: ${action}`, "success");
+    logOverrideAction(`${action} بوابة ${gateName}`, document.getElementById("overrideReason")?.value?.trim() || "");
+  } catch (e) {
+    showAlert("فشل التحكم عن بعد: " + e.message, "error");
+  }
+};
+
+window.logOverrideAction = async (action, reason) => {
+  const entry = {
+    time: Date.now(),
+    mode: syncState.currentMode,
+    action: action || "إجراء يدوي",
+    reason: reason || document.getElementById("overrideReason")?.value?.trim() || "غير محدد",
+  };
+  syncState.overrideLog.unshift(entry);
+  if (syncState.overrideLog.length > 100) syncState.overrideLog.length = 100;
+  renderOverrideLog();
+
+  const reasonInput = document.getElementById("overrideReason");
+  if (reasonInput) reasonInput.value = "";
+
+  try {
+    await push(ref(db, "overrideLog"), {
+      ...entry,
+      performedBy: currentUser?.uid || "admin",
+    });
+  } catch (_) {}
+
+  showAlert("✅ تم تسجيل التجاوز", "success");
+};
+
+function renderOverrideLog() {
+  const tbody = document.getElementById("overrideLogTable");
+  if (!tbody) return;
+  tbody.innerHTML = syncState.overrideLog.slice(0, 30).map((e) => {
+    const modeLabels = { auto: "تلقائي", maintenance: "صيانة", fault_recovery: "استرداد أعطال", emergency: "طوارئ" };
+    return `<tr>
+      <td style="font-size:13px;color:var(--text-muted);">${new Date(e.time).toLocaleString("ar")}</td>
+      <td>${modeLabels[e.mode] || e.mode}</td>
+      <td>${e.action}</td>
+      <td style="color:var(--text-muted);font-size:13px;">${e.reason}</td>
+    </tr>`;
+  }).join("");
+}
+
+// ===== SLOTS RENDER =====
 function renderSlots() {
   const tbody = document.getElementById("slotsTable");
   if (!tbody) return;
@@ -182,10 +478,7 @@ function renderLiveAccess() {
   tbody.innerHTML = "";
   for (let [id, acc] of Object.entries(live)) {
     if (acc.active && acc.expireAt > Date.now()) {
-      const expiresIn = Math.max(
-        0,
-        Math.floor((acc.expireAt - Date.now()) / 60000),
-      );
+      const expiresIn = Math.max(0, Math.floor((acc.expireAt - Date.now()) / 60000));
       tbody.innerHTML += `<tr>
         <td style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:3px;color:var(--accent);direction:ltr;">${acc.otp}</td>
         <td style="font-family:monospace;font-size:13px;color:var(--text-muted)">${acc.userId?.slice(0, 8)}..</td>
@@ -231,6 +524,7 @@ function renderLogs() {
   }
 }
 
+// ===== ACTIONS =====
 window.updateUserRole = async (uid, role) => {
   await update(ref(db, `users/${uid}`), { role });
   showAlert("✅ تم تحديث الدور", "success");
@@ -244,20 +538,20 @@ window.controlGate = async (gate, open) => {
     gate === "entry" ? "entryGateStatus" : "exitGateStatus",
   );
   if (statusEl) statusEl.innerHTML = open ? "🟢 مفتوحة" : "🔴 مغلقة";
-  showAlert(
-    `${gate === "entry" ? "بوابة الدخول" : "بوابة الخروج"} ${open ? "مفتوحة ✅" : "مغلقة 🔒"}`,
-    "success",
-  );
+  showAlert(`${gate === "entry" ? "بوابة الدخول" : "بوابة الخروج"} ${open ? "مفتوحة ✅" : "مغلقة 🔒"}`, "success");
   try {
+    await set(ref(db, `gates/${gate}/command`), open ? "open" : "close");
     await update(ref(db, `gates/${gate}`), { open, lastAction: Date.now() });
   } catch (e) {
     showAlert("فشل التحكم بالبوابة: " + e.message, "error");
   }
 };
 
-// مستمعات Firebase
+// ===== FIREBASE LISTENERS =====
 onValue(ref(db, "slots"), (snap) => {
+  const prevSlots = allData.slots;
   allData.slots = snap.val() || {};
+  detectTransition(allData.slots);
   renderSlots();
   updateDashboardStats();
 });
@@ -279,26 +573,40 @@ onValue(ref(db, "system"), (snap) => {
   allData.system = snap.val() || {};
   updateDashboardStats();
   updateESP32Status();
+  if (allData.system.overrideMode && allData.system.overrideMode !== syncState.currentMode) {
+    window.setOverrideMode(allData.system.overrideMode);
+  }
 });
 onValue(ref(db, "gates"), (snap) => {
   allData.gates = snap.val() || {};
   const entryGateSpan = document.getElementById("entryGateStatus");
   if (entryGateSpan)
-    entryGateSpan.innerHTML = allData.gates.entry?.open
-      ? "🟢 مفتوحة"
-      : "🔴 مغلقة";
+    entryGateSpan.innerHTML = allData.gates.entry?.open ? "🟢 مفتوحة" : "🔴 مغلقة";
   const exitGateSpan = document.getElementById("exitGateStatus");
   if (exitGateSpan)
-    exitGateSpan.innerHTML = allData.gates.exit?.open
-      ? "🟢 مفتوحة"
-      : "🔴 مغلقة";
+    exitGateSpan.innerHTML = allData.gates.exit?.open ? "🟢 مفتوحة" : "🔴 مغلقة";
+
+  const remoteEntry = document.getElementById("remoteEntryStatus");
+  if (remoteEntry) remoteEntry.innerHTML = allData.gates.entry?.open ? "🟢 مفتوحة" : "🔴 مغلقة";
+  const remoteExit = document.getElementById("remoteExitStatus");
+  if (remoteExit) remoteExit.innerHTML = allData.gates.exit?.open ? "🟢 مفتوحة" : "🔴 مغلقة";
 });
 onValue(ref(db, "logs"), (snap) => {
   allData.logs = snap.val() || {};
   renderLogs();
 });
 
-// أزرار التحكم
+// Listen for override log from Firebase
+onChildAdded(ref(db, "overrideLog"), (snap) => {
+  const val = snap.val();
+  if (val && !syncState.overrideLog.find((e) => e.time === val.time && e.action === val.action)) {
+    syncState.overrideLog.unshift(val);
+    if (syncState.overrideLog.length > 100) syncState.overrideLog.length = 100;
+    renderOverrideLog();
+  }
+});
+
+// ===== UI CONTROLS =====
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 if (saveSettingsBtn) {
   saveSettingsBtn.addEventListener("click", async () => {
@@ -324,8 +632,7 @@ if (emergencyStopBtn) {
 }
 
 const refreshBtn = document.getElementById("refreshBtn");
-if (refreshBtn)
-  refreshBtn.addEventListener("click", () => updateDashboardStats());
+if (refreshBtn) refreshBtn.addEventListener("click", () => updateDashboardStats());
 
 const clearLogsBtn = document.getElementById("clearLogsBtn");
 if (clearLogsBtn) {
@@ -343,19 +650,14 @@ if (logoutBtn) {
   });
 }
 
-// التنقل بين الأقسام
+// ===== NAVIGATION =====
 document.querySelectorAll(".nav-item[data-section]").forEach((item) => {
   item.addEventListener("click", () => {
-    document.querySelectorAll(".section").forEach((s) => {
-      s.classList.remove("active");
-    });
+    document.querySelectorAll(".section").forEach((s) => s.classList.remove("active"));
     const target = document.getElementById(item.dataset.section);
     if (target) target.classList.add("active");
-    document.querySelectorAll(".nav-item").forEach((nav) => {
-      nav.classList.remove("active");
-    });
+    document.querySelectorAll(".nav-item").forEach((nav) => nav.classList.remove("active"));
     item.classList.add("active");
-    // Refresh CodeMirror when switching to embedded tools
     if (item.dataset.section === "embedded_tools" && window._editor) {
       setTimeout(() => window._editor.refresh(), 100);
     }
@@ -363,28 +665,12 @@ document.querySelectorAll(".nav-item[data-section]").forEach((item) => {
 });
 
 onAuthStateChanged(auth, (user) => {
+  currentUser = user;
   if (!user) window.location.href = "../index.html";
 });
 
-// تحديث دوري لحالة ESP32 كل 5 ثوانٍ
 setInterval(() => {
   if (allData.system) updateESP32Status();
 }, 5000);
 
-window.controlGate = async (gate, open) => {
-  const statusEl = document.getElementById(
-    gate === "entry" ? "entryGateStatus" : "exitGateStatus",
-  );
-  if (statusEl) statusEl.innerHTML = open ? "🟢 مفتوحة" : "🔴 مغلقة";
-  showAlert(
-    `${gate === "entry" ? "بوابة الدخول" : "بوابة الخروج"} ${open ? "مفتوحة ✅" : "مغلقة 🔒"}`,
-    "success",
-  );
-  try {
-    // كتابة أمر صريح بدلاً من تعديل الحالة
-    await set(ref(db, `gates/${gate}/command`), open ? "open" : "close");
-  } catch (e) {
-    showAlert("فشل إرسال الأمر: " + e.message, "error");
-  }
-};
-console.log("✅ لوحة الإدارة العربية جاهزة مع Arduino IDE المضمن");
+console.log("✅ Event-Driven Cloud Admin Dashboard loaded");

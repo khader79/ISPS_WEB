@@ -369,6 +369,12 @@
       .stat-card:nth-child(4)::before {
         background: linear-gradient(90deg, var(--purple), var(--teal));
       }
+      .stat-card:nth-child(5)::before {
+        background: linear-gradient(90deg, var(--teal), var(--accent));
+      }
+      .stat-card:nth-child(6)::before {
+        background: linear-gradient(90deg, var(--amber), var(--green));
+      }
       .stat-card:hover {
         transform: translateY(-5px);
         border-color: var(--border-hover);
@@ -415,6 +421,20 @@
       }
       .stat-card:nth-child(4):hover .stat-icon {
         background: rgba(139, 92, 246, 0.18);
+      }
+      .stat-card:nth-child(5) .stat-icon {
+        background: rgba(20, 184, 166, 0.1);
+        color: var(--teal);
+      }
+      .stat-card:nth-child(5):hover .stat-icon {
+        background: rgba(20, 184, 166, 0.18);
+      }
+      .stat-card:nth-child(6) .stat-icon {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--amber);
+      }
+      .stat-card:nth-child(6):hover .stat-icon {
+        background: rgba(245, 158, 11, 0.18);
       }
       .stat-card .label {
         color: var(--text-muted);
@@ -606,6 +626,22 @@
         display: flex;
         gap: 10px;
         justify-content: center;
+      }
+
+      /* ===== OVERRIDE MODE CARDS ===== */
+      [onclick*="setOverrideMode"]:hover {
+        border-color: rgba(59, 130, 246, 0.3) !important;
+        transform: translateY(-2px);
+      }
+      [onclick*="setOverrideMode"].active-mode {
+        border-color: var(--accent) !important;
+        background: rgba(59, 130, 246, 0.08) !important;
+      }
+      [onclick*="setOverrideMode"].active-mode #overrideCheckAuto,
+      [onclick*="setOverrideMode"].active-mode [id^="overrideCheck"] {
+        border-color: var(--accent) !important;
+        background: var(--accent) !important;
+        color: #fff !important;
       }
 
       /* ===== SETTINGS ===== */
@@ -1249,6 +1285,12 @@
         <div class="nav-item" data-section="system">
           <i class="fas fa-sliders-h"></i> النظام
         </div>
+        <div class="nav-item" data-section="events">
+          <i class="fas fa-bolt"></i> الأحداث
+        </div>
+        <div class="nav-item" data-section="remote">
+          <i class="fas fa-satellite-dish"></i> التحكم عن بعد
+        </div>
         <div class="nav-item" data-section="logs">
           <i class="fas fa-history"></i> السجلات
         </div>
@@ -1362,6 +1404,22 @@
             </div>
             <div class="value" id="adminTotalUsers">0</div>
           </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <div class="label">
+              <i class="fas fa-sync-alt" style="color: var(--teal)"></i>
+              معاملات السحابة
+            </div>
+            <div class="value" id="adminCloudTx">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+            <div class="label">
+              <i class="fas fa-wave-square" style="color: var(--amber)"></i>
+              الأحداث المُتحقق منها
+            </div>
+            <div class="value" id="adminEventsValidated">0</div>
+          </div>
         </div>
 
         <div class="panel">
@@ -1401,6 +1459,35 @@
           </div>
           <div style="position: relative; height: 200px">
             <canvas id="occupancyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-cloud-upload-alt"></i> مزامنة الحالة مع السحابة</h3>
+            <span id="cloudSyncStatus" style="font-size:12px;color:var(--green);font-weight:600;">🟢 نشط</span>
+          </div>
+          <div class="sys-monitor">
+            <div>
+              <span class="sys-mon-icon">📡</span>
+              <span class="sys-mon-label">حالة المزامنة</span>
+              <span class="sys-mon-value" id="syncStateDisplay">متزامن</span>
+            </div>
+            <div>
+              <span class="sys-mon-icon">⚡</span>
+              <span class="sys-mon-label">الكمون (Latency)</span>
+              <span class="sys-mon-value" id="syncLatency">—</span>
+            </div>
+            <div>
+              <span class="sys-mon-icon">📊</span>
+              <span class="sys-mon-label">معاملات موفرة</span>
+              <span class="sys-mon-value" id="savedTransactions">0</span>
+            </div>
+            <div>
+              <span class="sys-mon-icon">🔗</span>
+              <span class="sys-mon-label">نمط الأحداث</span>
+              <span class="sys-mon-value" id="eventModeDisplay">حالة انتقال</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1581,6 +1668,193 @@
                 <i class="fas fa-ban"></i> إيقاف طوارئ
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EVENTS ===== -->
+      <div id="events" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-bolt"></i> الأحداث - انتقال الحالة</h1>
+          <p>نموذج الأحداث المدعوم بالحالة: يتم إنشاء معاملات السحابة فقط عند التحقق من انتقالات الإشغال</p>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-arrow-up" style="color:var(--green)"></i></div>
+            <div class="label">وصل (EMPTY→OCCUPIED)</div>
+            <div class="value" id="arrivalEvents">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-arrow-down" style="color:var(--red)"></i></div>
+            <div class="label">مغادرة (OCCUPIED→EMPTY)</div>
+            <div class="value" id="departureEvents">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-check-circle" style="color:var(--green)"></i></div>
+            <div class="label">انتقالات مُتحقق منها</div>
+            <div class="value" id="validatedTransitions">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-ban" style="color:var(--red)"></i></div>
+            <div class="label">معاملات مرفوضة</div>
+            <div class="value" id="rejectedTransitions">0</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-list-ul"></i> سجل الأحداث الفورية</h3>
+            <span id="eventCountBadge" style="font-size:12px;color:var(--text-muted);">0 حدث</span>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>الموقف</th>
+                  <th>الانتقال</th>
+                  <th>حالة التحقق</th>
+                  <th>معاملة سحابية</th>
+                  <th>زمن الاستجابة</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-project-diagram"></i> رسم بياني لتدفق الأحداث</h3>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;padding:16px 0;">
+            <div style="text-align:center;padding:16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-sm);border:1px solid var(--border);min-width:120px;">
+              <div style="font-size:32px;margin-bottom:8px;">🅿️</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">حساس الموقف</div>
+              <div style="font-size:20px;font-weight:800;color:var(--green);" id="flowSensorState">EMPTY</div>
+            </div>
+            <div style="font-size:28px;color:var(--text-muted);">→</div>
+            <div style="text-align:center;padding:16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-sm);border:1px solid var(--border);min-width:120px;">
+              <div style="font-size:32px;margin-bottom:8px;">✅</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">التحقق من الانتقال</div>
+              <div style="font-size:20px;font-weight:800;color:var(--amber);" id="flowValidationState">⏳</div>
+            </div>
+            <div style="font-size:28px;color:var(--text-muted);">→</div>
+            <div style="text-align:center;padding:16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-sm);border:1px solid var(--border);min-width:120px;">
+              <div style="font-size:32px;margin-bottom:8px;">☁️</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">معاملة سحابية</div>
+              <div style="font-size:20px;font-weight:800;color:var(--accent);" id="flowCloudState">⏸️</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== REMOTE CONTROL ===== -->
+      <div id="remote" class="section">
+        <div class="page-header">
+          <h1><i class="fas fa-satellite-dish"></i> التحكم عن بعد - قناة تجاوز</h1>
+          <p>قناة تحكم عن بعد مخصصة لتجاوز عمليات الحساسات المحلية عند الحاجة</p>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+          <div class="stat-card" style="border-color:rgba(59,130,246,0.15);">
+            <div class="stat-icon" style="background:rgba(59,130,246,0.1);color:var(--accent);"><i class="fas fa-robot"></i></div>
+            <div class="label">نمط التشغيل</div>
+            <div class="value" style="font-size:22px;" id="remoteModeDisplay">تلقائي</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(245,158,11,0.15);">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--amber);"><i class="fas fa-shield-alt"></i></div>
+            <div class="label">حالة التجاوز</div>
+            <div class="value" style="font-size:22px;" id="remoteOverrideDisplay">غير نشط</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(16,185,129,0.15);">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);"><i class="fas fa-clock"></i></div>
+            <div class="label">آخر تجاوز</div>
+            <div class="value" style="font-size:22px;" id="remoteLastOverride">—</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="panel">
+            <div class="panel-header">
+              <h3><i class="fas fa-sliders-h"></i> أوضاع التجاوز</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-xs);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;" onclick="setOverrideMode('auto')" id="overrideBtnAuto">
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--green);flex-shrink:0;">🤖</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:14px;">الوضع التلقائي</div>
+                  <div style="font-size:11px;color:var(--text-muted);">التشغيل العادي بالحساسات المحلية</div>
+                </div>
+                <div id="overrideCheckAuto" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;">✓</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-xs);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;" onclick="setOverrideMode('maintenance')" id="overrideBtnMaintenance">
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--amber);flex-shrink:0;">🔧</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:14px;">وضع الصيانة</div>
+                  <div style="font-size:11px;color:var(--text-muted);">تجاوز الحساسات، تحكم يدوي كامل</div>
+                </div>
+                <div id="overrideCheckMaintenance" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;">✓</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-xs);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;" onclick="setOverrideMode('fault_recovery')" id="overrideBtnFault">
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(139,92,246,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--purple);flex-shrink:0;">🛡️</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:14px;">استرداد الأعطال</div>
+                  <div style="font-size:11px;color:var(--text-muted);">تجاوز آمن لاستعادة النظام بعد العطل</div>
+                </div>
+                <div id="overrideCheckFault" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;">✓</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-xs);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;" onclick="setOverrideMode('emergency')" id="overrideBtnEmergency">
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--red);flex-shrink:0;">🚨</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:14px;">طوارئ</div>
+                  <div style="font-size:11px;color:var(--text-muted);">إغلاق فوري لجميع البوابات، تجاوز كامل</div>
+                </div>
+                <div id="overrideCheckEmergency" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;">✓</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3><i class="fas fa-door-open"></i> تحكم يدوي بالبوابات</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-xs);border:1px solid var(--border);">
+                <div><strong>🚪 بوابة الدخول</strong><br><span style="font-size:12px;color:var(--text-muted);" id="remoteEntryStatus">🔴 مغلقة</span></div>
+                <div style="display:flex;gap:8px;">
+                  <button onclick="remoteGateControl('entry', true)" style="padding:8px 16px;font-size:12px;"><i class="fas fa-unlock-alt"></i> فتح</button>
+                  <button onclick="remoteGateControl('entry', false)" class="danger" style="padding:8px 16px;font-size:12px;"><i class="fas fa-lock"></i> إغلاق</button>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(0,0,0,0.1);border-radius:var(--radius-xs);border:1px solid var(--border);">
+                <div><strong>🚙 بوابة الخروج</strong><br><span style="font-size:12px;color:var(--text-muted);" id="remoteExitStatus">🔴 مغلقة</span></div>
+                <div style="display:flex;gap:8px;">
+                  <button onclick="remoteGateControl('exit', true)" style="padding:8px 16px;font-size:12px;"><i class="fas fa-unlock-alt"></i> فتح</button>
+                  <button onclick="remoteGateControl('exit', false)" class="danger" style="padding:8px 16px;font-size:12px;"><i class="fas fa-lock"></i> إغلاق</button>
+                </div>
+              </div>
+              <div style="margin-top:6px;">
+                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;"><i class="fas fa-tag"></i> سبب التجاوز (اختياري)</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="overrideReason" placeholder="صيانة / طوارئ / اختبار..." style="flex:1;">
+                  <button onclick="logOverrideAction()" class="outline" style="white-space:nowrap;"><i class="fas fa-pen"></i> تسجيل</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-clipboard-list"></i> سجل التجاوزات</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>النمط</th>
+                  <th>الإجراء</th>
+                  <th>السبب</th>
+                </tr>
+              </thead>
+              <tbody id="overrideLogTable"></tbody>
+            </table>
           </div>
         </div>
       </div>
