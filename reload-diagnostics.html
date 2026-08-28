@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>تشخيص مشكلة الريفريش</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #00d4ff;
+        font-family: Cairo, Arial;
+        padding: 20px;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #00ff88;
+        font-size: 2em;
+      }
+      .box {
+        background: rgba(59, 130, 246, 0.1);
+        border: 2px solid #3b82f6;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 15px 0;
+        backdrop-filter: blur(10px);
+      }
+      .box h2 {
+        color: #00d4ff;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+      }
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      }
+      .info-row:last-child {
+        border-bottom: none;
+      }
+      .label {
+        font-weight: bold;
+        color: #00ff88;
+      }
+      .value {
+        color: #00d4ff;
+        font-family: monospace;
+      }
+      button {
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #3b82f6, #1e40af);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+        font-family: Cairo;
+        transition: all 0.3s;
+      }
+      button:hover {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      }
+      button.danger {
+        background: linear-gradient(135deg, #ef4444, #7f1d1d);
+      }
+      button.danger:hover {
+        background: linear-gradient(135deg, #7f1d1d, #ef4444);
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+      }
+      button.success {
+        background: linear-gradient(135deg, #10b981, #065f46);
+      }
+      button.success:hover {
+        background: linear-gradient(135deg, #065f46, #10b981);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      }
+      .log {
+        background: rgba(0, 0, 0, 0.3);
+        border-left: 3px solid #00ff88;
+        padding: 15px;
+        border-radius: 4px;
+        max-height: 250px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      .log-entry {
+        margin: 5px 0;
+        padding: 5px;
+      }
+      .log-info {
+        color: #00d4ff;
+      }
+      .log-warn {
+        color: #fbbf24;
+      }
+      .log-error {
+        color: #ef4444;
+      }
+      .log-success {
+        color: #10b981;
+      }
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .status-good {
+        background: #10b981;
+      }
+      .status-bad {
+        background: #ef4444;
+      }
+      .status-warn {
+        background: #fbbf24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 تشخيص مشكلة الريفريش</h1>
+
+      <div class="box">
+        <h2>معلومات البيئة</h2>
+        <div class="info-row">
+          <span class="label">الوقت الحالي:</span>
+          <span class="value" id="time">--:--:--</span>
+        </div>
+        <div class="info-row">
+          <span class="label">عنوان الصفحة:</span>
+          <span class="value" id="url">--</span>
+        </div>
+        <div class="info-row">
+          <span class="label">مستكشف المتصفح:</span>
+          <span class="value" id="browser">--</span>
+        </div>
+        <div class="info-row">
+          <span class="label">حالة الخادم (localhost:3001):</span>
+          <span class="value"
+            ><span class="status-indicator" id="serverStatus"></span
+            ><span id="serverStatusText">جاري الفحص...</span></span
+          >
+        </div>
+        <div class="info-row">
+          <span class="label">عدد مرات تحميل الصفحة:</span>
+          <span class="value" id="reloadCount">1</span>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>🧪 اختبارات تشخيصية</h2>
+        <button onclick="testServerConnection()">اختبر اتصال الخادم</button>
+        <button onclick="testCompileEndpoint()" class="danger">
+          اختبر نقطة الترجمة
+        </button>
+        <button onclick="testReloadAttempt()" class="warn">
+          حاول إعادة تحميل الصفحة
+        </button>
+        <button onclick="checkExtensions()" class="success">
+          فحص ملحقات المتصفح
+        </button>
+      </div>
+
+      <div class="box">
+        <h2>📋 السجل</h2>
+        <div class="log" id="log"></div>
+      </div>
+
+      <div class="box">
+        <h2>💡 التوصيات</h2>
+        <ul id="recommendations" style="list-style: none; padding: 0"></ul>
+      </div>
+    </div>
+
+    <script>
+      // Update time continuously
+      setInterval(() => {
+        document.getElementById("time").textContent =
+          new Date().toLocaleTimeString("ar");
+      }, 1000);
+
+      // Set URL
+      document.getElementById("url").textContent = window.location.href;
+
+      // Detect browser
+      const ua = navigator.userAgent;
+      let browserInfo = "غير معروف";
+      if (ua.indexOf("Firefox") > -1) browserInfo = "Firefox";
+      else if (ua.indexOf("Chrome") > -1) browserInfo = "Chrome";
+      else if (ua.indexOf("Safari") > -1) browserInfo = "Safari";
+      else if (ua.indexOf("Edge") > -1) browserInfo = "Edge";
+      document.getElementById("browser").textContent = browserInfo;
+
+      // Track page reloads
+      let reloadCount = sessionStorage.getItem("reloadCount") || 0;
+      reloadCount = parseInt(reloadCount) + 1;
+      sessionStorage.setItem("reloadCount", reloadCount);
+      document.getElementById("reloadCount").textContent = reloadCount;
+
+      // Logging system
+      function addLog(message, type = "info") {
+        const log = document.getElementById("log");
+        const entry = document.createElement("div");
+        entry.className = `log-entry log-${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString("ar")}] ${message}`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      // Add recommendations
+      function addRecommendation(text) {
+        const list = document.getElementById("recommendations");
+        const li = document.createElement("li");
+        li.style.marginBottom = "8px";
+        li.innerHTML = "✓ " + text;
+        list.appendChild(li);
+      }
+
+      // Test server connection
+      async function testServerConnection() {
+        addLog("🧪 اختبار اتصال الخادم...", "info");
+        try {
+          const response = await fetch("http://localhost:3001/boards", {
+            method: "GET",
+            timeout: 5000,
+          });
+          if (response.ok) {
+            addLog("✅ الخادم متاح وعامل", "success");
+            document.getElementById("serverStatus").className =
+              "status-indicator status-good";
+            document.getElementById("serverStatusText").textContent = "متصل";
+          } else {
+            addLog("⚠️ الخادم يرد بخطأ: " + response.status, "warn");
+            document.getElementById("serverStatus").className =
+              "status-indicator status-warn";
+            document.getElementById("serverStatusText").textContent = "خطأ";
+          }
+        } catch (e) {
+          addLog("❌ الخادم غير متاح: " + e.message, "error");
+          document.getElementById("serverStatus").className =
+            "status-indicator status-bad";
+          document.getElementById("serverStatusText").textContent = "غير متصل";
+          addRecommendation("تأكد من تشغيل خادم الترجمة على المنفذ 3001");
+        }
+      }
+
+      // Test compile endpoint
+      async function testCompileEndpoint() {
+        addLog("🧪 اختبار نقطة الترجمة...", "info");
+        try {
+          const testCode = "void setup() {}\\nvoid loop() {}";
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+
+          const response = await fetch("http://localhost:3001/compile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              code: testCode,
+              boardFqbn: "arduino:avr:uno",
+            }),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeout);
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.error) {
+              addLog("⚠️ الترجمة فشلت: " + data.error, "warn");
+            } else {
+              addLog("✅ نقطة الترجمة تعمل بشكل صحيح", "success");
+            }
+          } else {
+            addLog("❌ الخادم رد برمز خطأ: " + response.status, "error");
+          }
+        } catch (e) {
+          if (e.name === "AbortError") {
+            addLog("⏱️ انتهت مهلة الوقت - الخادم بطيء", "error");
+            addRecommendation("تأكد من أن خادم Arduino CLI يعمل بشكل صحيح");
+          } else {
+            addLog("❌ خطأ: " + e.message, "error");
+          }
+        }
+      }
+
+      // Test reload attempts
+      function testReloadAttempt() {
+        addLog("🧪 محاولة إعادة تحميل الصفحة...", "warn");
+        setTimeout(() => {
+          addLog(
+            "ملاحظة: إذا حدثت إعادة تحميل، فهناك مصدر خارجي يسبب المشكلة",
+            "info",
+          );
+        }, 500);
+
+        // Try to detect if reload actually happens
+        const startTime = Date.now();
+        window.addEventListener(
+          "beforeunload",
+          () => {
+            addLog("✅ تم تحديد محاولة إعادة تحميل!", "success");
+          },
+          { once: true },
+        );
+
+        // Simulate a page reload by setting location
+        try {
+          // This will likely cause a reload
+          // window.location.href = window.location.href;
+          addLog(
+            "⏸️ تم إيقاف محاولة إعادة التحميل للحفاظ على البيانات",
+            "warn",
+          );
+        } catch (e) {
+          addLog("❌ خطأ: " + e.message, "error");
+        }
+      }
+
+      // Check browser extensions
+      function checkExtensions() {
+        addLog("🧪 فحص ملحقات المتصفح...", "info");
+        addLog("الملحقات المكتشفة:", "info");
+
+        // Check for common problematic extensions
+        const issues = [];
+
+        // Live Server detection
+        if (document.currentScript?.src?.includes("liveReloadContent")) {
+          issues.push("Live Server Extension");
+        }
+
+        // Check for Live Reload script
+        const scripts = document.getElementsByTagName("script");
+        for (let script of scripts) {
+          if (
+            script.src?.includes("livereload") ||
+            script.src?.includes("live-reload")
+          ) {
+            issues.push("Live Reload Script");
+          }
+          if (script.src?.includes("browser-sync")) {
+            issues.push("BrowserSync Extension");
+          }
+        }
+
+        // Check Service Workers
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            if (registrations.length > 0) {
+              addLog(
+                `⚠️ تم اكتشاف ${registrations.length} Service Worker(s)`,
+                "warn",
+              );
+              addRecommendation(
+                "تأكد من عدم وجود Service Workers تسبب في إعادة التحميل",
+              );
+            }
+          });
+        }
+
+        if (issues.length === 0) {
+          addLog("✅ لم يتم اكتشاف ملحقات إشكالية واضحة", "success");
+        } else {
+          issues.forEach((issue) => {
+            addLog(`⚠️ تم اكتشاف: ${issue}`, "warn");
+          });
+          addRecommendation("عطّل الملحقات المشبوهة وأعد المحاولة");
+        }
+      }
+
+      // Initial checks
+      window.addEventListener("load", () => {
+        addLog("✅ تم تحميل صفحة التشخيص بنجاح", "success");
+        testServerConnection();
+        checkExtensions();
+      });
+
+      // Run initial checks when script loads
+      addLog("🛡️ نظام التشخيص جاهز", "success");
+    </script>
+  </body>
+</html>

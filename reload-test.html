@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>اختبار حماية الريفريش</title>
+    <script src="./no-reload.js"></script>
+    <style>
+      body {
+        background: #1a1a2e;
+        color: #fff;
+        font-family: Cairo, Arial;
+        padding: 20px;
+      }
+      .box {
+        background: #16213e;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 10px 0;
+      }
+      button {
+        padding: 10px 20px;
+        background: #0f3460;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #533483;
+      }
+      .success {
+        background: #10b981;
+      }
+      .danger {
+        background: #ef4444;
+      }
+      #log {
+        background: #0a0e27;
+        padding: 10px;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🛡️ اختبار حماية الريفريش</h1>
+
+    <div class="box">
+      <h2>معلومات النظام</h2>
+      <p>Status: <strong id="status">جاهز</strong></p>
+      <p>محاولات الريفريش المحجوبة: <strong id="blockedCount">0</strong></p>
+    </div>
+
+    <div class="box">
+      <h2>اختبارات</h2>
+      <button onclick="testReload()">🔄 اختبر location.reload()</button>
+      <button onclick="testF5()">F5 اختبر اختصار</button>
+      <button onclick="testCtrlR()">Ctrl+R اختبر اختصار</button>
+      <button onclick="testNavigation()">اختبر التنقل</button>
+      <button class="success" onclick="allowedReload()">✅ ريفريش مسموح</button>
+    </div>
+
+    <div class="box">
+      <h2>🔍 السجل</h2>
+      <div id="log"></div>
+    </div>
+
+    <script>
+      let logCount = 0;
+
+      function log(msg) {
+        const logDiv = document.getElementById("log");
+        const line = document.createElement("div");
+        line.textContent = `[${new Date().toLocaleTimeString("ar")}] ${msg}`;
+        logDiv.appendChild(line);
+        logDiv.scrollTop = logDiv.scrollHeight;
+        logCount++;
+        document.getElementById("blockedCount").textContent = logCount;
+      }
+
+      function testReload() {
+        log("🧪 اختبار location.reload()...");
+        window.location.reload();
+      }
+
+      function testF5() {
+        log("🧪 اختبار F5 (simulated)...");
+        const e = new KeyboardEvent("keydown", { keyCode: 116 });
+        document.dispatchEvent(e);
+      }
+
+      function testCtrlR() {
+        log("🧪 اختبار Ctrl+R (simulated)...");
+        const e = new KeyboardEvent("keydown", { keyCode: 82, ctrlKey: true });
+        document.dispatchEvent(e);
+      }
+
+      function testNavigation() {
+        log("🧪 اختبار التنقل...");
+        try {
+          window.location.replace(window.location.href);
+        } catch (e) {
+          log("❌ خطأ: " + e.message);
+        }
+      }
+
+      function allowedReload() {
+        log("✅ ريفريش مسموح - سيتم تحديث الصفحة في 2 ثانية...");
+        setTimeout(() => {
+          window.safeReload();
+        }, 2000);
+      }
+
+      // Check reload attempts
+      setInterval(() => {
+        const attempts = window.getReloadAttempts?.() || [];
+        if (attempts.length > logCount) {
+          for (let i = logCount; i < attempts.length; i++) {
+            log(`⚠️ محاولة محجوبة: ${attempts[i].time}`);
+          }
+        }
+      }, 500);
+
+      log("✅ صفحة الاختبار جاهزة");
+    </script>
+  </body>
+</html>

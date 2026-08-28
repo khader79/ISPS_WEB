@@ -1,0 +1,72 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\khade\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.8\\cores\\esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\khade\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.8\\variants\\esp32"
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Me\\Coding\\Iot Smart Parking System\\web\\server\\builds\\548fa10d2390b3a7\\sketch\\sketch_548fa10d2390b3a7.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\khade\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.8\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Me\\Coding\\Iot Smart Parking System\\web\\server\\builds\\548fa10d2390b3a7\\sketch\\sketch_548fa10d2390b3a7.ino.cpp",
+    "Include": "Adafruit_PWMServoDriver.h",
+    "Includepath": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_PWM_Servo_Driver_Library"
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Me\\Coding\\Iot Smart Parking System\\web\\server\\builds\\548fa10d2390b3a7\\sketch\\sketch_548fa10d2390b3a7.ino.cpp",
+    "Include": "Adafruit_I2CDevice.h",
+    "Includepath": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_BusIO"
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Me\\Coding\\Iot Smart Parking System\\web\\server\\builds\\548fa10d2390b3a7\\sketch\\sketch_548fa10d2390b3a7.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.8\\libraries\\Wire\\src\\Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_PWM_Servo_Driver_Library\\Adafruit_PWMServoDriver.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\khade\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.8\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_GenericDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_SPIDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\khade\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.8\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]

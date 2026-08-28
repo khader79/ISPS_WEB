@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "build.warn_data_percentage=75",
+  "fqbn": "esp32:esp32:esp32",
+  "hardwareFolders": "C:\\Users\\khade\\AppData\\Local\\Arduino15\\packages",
+  "otherLibrariesFolders": "C:\\Users\\khade\\Documents\\Arduino\\libraries",
+  "sketchLocation": "C:\\Users\\khade\\Documents\\Me\\Coding\\Iot Smart Parking System\\web\\server\\uploads\\sketch_32c4ef8f01c3009e"
+}

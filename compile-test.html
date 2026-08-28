@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>اختبار الترجمة</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #1a1a2e;
+        color: #eee;
+        font-family: Cairo, Arial, sans-serif;
+        padding: 20px;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #16213e;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+      h1 {
+        color: #0f3460;
+        margin-bottom: 20px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 10px 20px;
+        background: #0f3460;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+      button:hover {
+        background: #533483;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      textarea {
+        width: 100%;
+        height: 300px;
+        padding: 10px;
+        background: #0f1419;
+        color: #0f0;
+        border: 1px solid #0f3460;
+        border-radius: 4px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        resize: vertical;
+      }
+      #log {
+        background: #0a0e27;
+        border: 1px solid #0f3460;
+        border-radius: 4px;
+        padding: 10px;
+        margin-top: 20px;
+        height: 250px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      .log-line {
+        margin: 2px 0;
+        padding: 2px 4px;
+      }
+      .info {
+        color: #60a5fa;
+      }
+      .success {
+        color: #10b981;
+      }
+      .error {
+        color: #f87171;
+      }
+      .warn {
+        color: #fbbf24;
+      }
+      .system {
+        color: #64748b;
+        font-style: italic;
+      }
+      select {
+        padding: 8px 12px;
+        background: #0f1419;
+        color: #eee;
+        border: 1px solid #0f3460;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .status {
+        padding: 10px;
+        background: rgba(15, 52, 96, 0.3);
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔨 اختبار خادم الترجمة</h1>
+
+      <div class="status">
+        <strong>الحالة:</strong> جاهز | خادم الترجمة:
+        <span id="serverStatus">اختبار...</span>
+      </div>
+
+      <div class="toolbar">
+        <select id="boardSelect">
+          <option value="esp32:esp32:esp32">ESP32 Dev Module</option>
+          <option value="esp8266:esp8266:esp8266">ESP8266</option>
+          <option value="arduino:avr:uno">Arduino Uno</option>
+          <option value="arduino:avr:mega">Arduino Mega</option>
+        </select>
+
+        <button id="compileBtn">⚙️ ترجمة</button>
+        <button id="downloadBtn">📥 تنزيل Binary</button>
+        <button id="clearBtn">🗑️ مسح السجل</button>
+        <button id="resetBtn">🔄 إعادة تعيين الكود</button>
+      </div>
+
+      <h3>📝 الكود:</h3>
+      <textarea id="codeEditor">
+// تحكم بوابة موقف السيارات
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
+}</textarea
+      >
+
+      <h3>📋 السجل:</h3>
+      <div id="log"></div>
+    </div>
+
+    <script>
+      const codeEditor = document.getElementById("codeEditor");
+      const compileBtn = document.getElementById("compileBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const boardSelect = document.getElementById("boardSelect");
+      const logDiv = document.getElementById("log");
+      const serverStatus = document.getElementById("serverStatus");
+
+      let compiledBinary = null;
+
+      function log(msg, type = "info") {
+        const line = document.createElement("div");
+        line.className = `log-line ${type}`;
+        const now = new Date();
+        const ts = now.toLocaleTimeString("ar");
+        line.textContent = `[${ts}] ${msg}`;
+        logDiv.appendChild(line);
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      async function checkServer() {
+        try {
+          const res = await fetch("http://localhost:3001/boards", {
+            timeout: 3000,
+          });
+          if (res.ok) {
+            serverStatus.textContent = "✅ متصل";
+            serverStatus.style.color = "#10b981";
+          } else {
+            serverStatus.textContent = "❌ خطأ في الاتصال";
+            serverStatus.style.color = "#f87171";
+          }
+        } catch (e) {
+          serverStatus.textContent = `❌ ${e.message}`;
+          serverStatus.style.color = "#f87171";
+          log("⚠️ لا يمكن الاتصال بخادم الترجمة على localhost:3001", "warn");
+        }
+      }
+
+      async function compile() {
+        const code = codeEditor.value.trim();
+        if (!code) {
+          log("❌ الكود فارغ", "error");
+          return;
+        }
+
+        compileBtn.disabled = true;
+        log("🔨 جاري الترجمة على السيرفر...", "info");
+        log(`📤 اللوحة: ${boardSelect.value}`, "system");
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 180000);
+
+        try {
+          log("📡 إرسال الطلب...", "system");
+          const resp = await fetch("http://localhost:3001/compile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, boardFqbn: boardSelect.value }),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          log(`📨 الاستجابة: ${resp.status}`, "system");
+
+          if (!resp.ok) {
+            const errText = await resp.text();
+            log(`❌ خطأ HTTP ${resp.status}`, "error");
+            log(errText.substring(0, 200), "error");
+            return;
+          }
+
+          const result = await resp.json();
+
+          if (result.success) {
+            log(`✅ تمت الترجمة بنجاح!`, "success");
+            log(
+              `📦 حجم الملف: ${(result.size / 1024).toFixed(1)} KB`,
+              "success",
+            );
+            log(`📄 الملف: ${result.fileName}`, "success");
+            compiledBinary = result.binary;
+            downloadBtn.disabled = false;
+          } else {
+            log(`❌ فشلت الترجمة`, "error");
+            if (result.error) {
+              result.error
+                .split("\n")
+                .slice(-10)
+                .forEach((line) => {
+                  if (line.trim()) log(line, "error");
+                });
+            }
+          }
+        } catch (e) {
+          clearTimeout(timeoutId);
+          if (e.name === "AbortError") {
+            log("⏱️ انتهت المهلة (180 ثانية)", "error");
+          } else {
+            log(`❌ خطأ: ${e.message}`, "error");
+          }
+        } finally {
+          compileBtn.disabled = false;
+        }
+      }
+
+      function downloadBinary() {
+        if (!compiledBinary) {
+          log("❌ لا يوجد ملف binary جاهز", "error");
+          return;
+        }
+        try {
+          const binaryArray = Uint8Array.from(atob(compiledBinary), (c) =>
+            c.charCodeAt(0),
+          );
+          const blob = new Blob([binaryArray], {
+            type: "application/octet-stream",
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "firmware.bin";
+          a.click();
+          URL.revokeObjectURL(url);
+          log("📥 تم تنزيل الملف", "success");
+        } catch (e) {
+          log(`❌ خطأ في التنزيل: ${e.message}`, "error");
+        }
+      }
+
+      compileBtn.addEventListener("click", compile);
+      downloadBtn.addEventListener("click", downloadBinary);
+      clearBtn.addEventListener("click", () => {
+        logDiv.innerHTML = "";
+        log("🗑️ تم مسح السجل", "system");
+      });
+      resetBtn.addEventListener("click", () => {
+        codeEditor.value = `// تحكم بوابة موقف السيارات
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
+}`;
+        log("🔄 تم إعادة تعيين الكود", "info");
+      });
+
+      // Initial checks
+      checkServer();
+      setInterval(checkServer, 5000);
+      log("✅ صفحة الاختبار جاهزة", "success");
+    </script>
+  </body>
+</html>

@@ -3,183 +3,407 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Parking — ESP32 Simulator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <title>ESP32 Hardware Simulator — Smart Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --bg: #0a0c14; --surface: #0f1422; --surface2: #131a2c;
-      --border: #1f2b44; --accent: #00e0ff; --accent2: #8b5cf6;
-      --green: #10b981; --red: #ef4444; --amber: #f59e0b;
-      --text: #eef2ff; --muted: #6b7280;
+      --bg: #080b14;
+      --surface: rgba(12,18,34,0.9);
+      --surface2: rgba(16,24,48,0.7);
+      --surface3: rgba(20,30,55,0.5);
+      --border: rgba(59,130,246,0.08);
+      --border-hover: rgba(59,130,246,0.15);
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --accent-dim: rgba(56,189,248,0.08);
+      --green: #10b981;
+      --green-glow: rgba(16,185,129,0.15);
+      --red: #ef4444;
+      --red-glow: rgba(239,68,68,0.12);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245,158,11,0.12);
+      --purple: #8b5cf6;
+      --text: #e2e8f0;
+      --text-soft: #94a3b8;
+      --text-muted: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --shadow-lg: 0 12px 48px rgba(0,0,0,0.4);
     }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
-    .header {
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-    }
-    .header h1 { font-size: 18px; font-weight: 700; }
-    .header h1 span { color: var(--accent); }
-    .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-    .badge.online { background: rgba(16,185,129,0.15); color: var(--green); }
-    .badge.offline { background: rgba(239,68,68,0.15); color: var(--red); }
-    .main { display: grid; grid-template-columns: 1fr 340px; gap: 12px; padding: 12px; max-width: 1400px; margin: 0 auto; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-    .card-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
 
-    /* Login */
-    .login-box { max-width: 360px; margin: 60px auto; text-align: center; }
-    .login-box input { width: 100%; padding: 10px 14px; margin-bottom: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
-    .login-box input:focus { outline: none; border-color: var(--accent); }
-    .btn { padding: 8px 16px; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: #000; }
-    .btn-primary:hover:not(:disabled) { filter: brightness(1.15); }
-    .btn-success { background: var(--green); color: #fff; }
-    .btn-danger { background: var(--red); color: #fff; }
-    .btn-amber { background: var(--amber); color: #000; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    body {
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(56,189,248,0.02) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 90%, rgba(129,140,248,0.015) 0%, transparent 50%);
+      color: var(--text);
+      font-family: 'Cairo', 'Inter', sans-serif;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(56,189,248,0.008) 80px, rgba(56,189,248,0.008) 81px),
+        repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(56,189,248,0.008) 80px, rgba(56,189,248,0.008) 81px);
+      pointer-events: none;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .btn {
+      padding: 9px 20px; border: none; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000; box-shadow: 0 4px 16px var(--accent-dim);
+    }
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 28px rgba(56,189,248,0.2); }
+    .btn-success {
+      background: linear-gradient(135deg, var(--green), #059669);
+      color: #fff; box-shadow: 0 4px 16px var(--green-glow);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, var(--red), #dc2626);
+      color: #fff; box-shadow: 0 4px 16px var(--red-glow);
+    }
+    .btn-amber {
+      background: linear-gradient(135deg, var(--amber), #d97706);
+      color: #000; box-shadow: 0 4px 16px var(--amber-glow);
+    }
+    .btn-outline {
+      background: transparent; border: 1.5px solid var(--border); color: var(--text-soft);
+    }
     .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-sm { padding: 6px 12px; font-size: 12px; }
-    .btn-block { width: 100%; }
-    .btn-lg { padding: 12px 20px; font-size: 15px; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-block { width: 100%; justify-content: center; }
+    .btn-lg { padding: 14px 24px; font-size: 15px; }
 
-    /* Slots */
-    .slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .slot { background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.3s; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .slot:hover { border-color: var(--accent); }
-    .slot .id { font-size: 16px; font-weight: 700; }
-    .slot .icon { font-size: 22px; margin: 4px 0; }
-    .slot .s { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 8px; }
-    .slot.empty { border-color: rgba(16,185,129,0.3); }
-    .slot.empty .s { background: rgba(16,185,129,0.15); color: var(--green); }
-    .slot.reserved { border-color: rgba(245,158,11,0.4); }
-    .slot.reserved .s { background: rgba(245,158,11,0.15); color: var(--amber); }
-    .slot.detected { border-color: rgba(245,158,11,0.3); }
-    .slot.detected .s { background: rgba(245,158,11,0.15); color: var(--amber); }
-    .slot.occupied { border-color: rgba(239,68,68,0.3); }
-    .slot.occupied .s { background: rgba(239,68,68,0.15); color: var(--red); }
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--surface);
+      backdrop-filter: blur(20px) saturate(1.2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header h1 {
+      font-size: 20px; font-weight: 700;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .header h1 .chip {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .header h1 .sub {
+      font-size: 11px; font-weight: 400;
+      color: var(--text-muted); letter-spacing: 0.5px;
+    }
+    .badge {
+      padding: 4px 14px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+    }
+    .badge.online { background: var(--green-glow); color: var(--green); }
+    .badge.offline { background: var(--red-glow); color: var(--red); }
+    .user-info { display: flex; align-items: center; gap: 12px; font-size: 13px; }
 
-    /* Gates */
-    .gate-row { display: flex; gap: 10px; }
+    /* ===== LOGIN ===== */
+    .login-box {
+      max-width: 400px; margin: 80px auto;
+      background: var(--surface); backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 40px 36px; text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .login-box .login-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; margin: 0 auto 20px;
+      box-shadow: 0 8px 32px rgba(56,189,248,0.15);
+    }
+    .login-box h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .login-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+    .login-box input {
+      width: 100%; padding: 12px 16px; margin-bottom: 12px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-size: 14px; font-family: inherit;
+      transition: all 0.25s;
+    }
+    .login-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim); }
+
+    /* ===== MAIN ===== */
+    .main {
+      display: grid; grid-template-columns: 1fr 360px;
+      gap: 16px; padding: 16px; max-width: 1400px; margin: 0 auto;
+    }
+    @media (max-width: 1000px) { .main { grid-template-columns: 1fr; } }
+    .left, .right { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--surface); backdrop-filter: blur(16px) saturate(1.2);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+    .card:hover { border-color: var(--border-hover); }
+    .card-title {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      margin-bottom: 14px; display: flex; align-items: center;
+      justify-content: space-between; gap: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== LCD ===== */
+    .lcd-container {
+      background: #0a0f1a;
+      border: 3px solid #1a2a40;
+      border-radius: 12px;
+      padding: 16px 20px;
+      position: relative;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.5), 0 0 20px rgba(56,189,248,0.03);
+    }
+    .lcd-container::before {
+      content: 'HD44780 16x2';
+      position: absolute; top: -10px; right: 20px;
+      background: #0a0f1a; padding: 0 8px;
+      font-size: 9px; color: #334155; font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .lcd-container::after {
+      content: '';
+      position: absolute; top: 0; left: 20px; right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(56,189,248,0.05), transparent);
+    }
+    .lcd {
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 60px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .lcd .row {
+      font-size: 18px; letter-spacing: 3px;
+      color: var(--accent);
+      text-shadow: 0 0 6px rgba(56,189,248,0.2), 0 0 20px rgba(56,189,248,0.05);
+      line-height: 1.6;
+    }
+
+    /* ===== SLOTS ===== */
+    .slots-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    }
+    .slot {
+      background: var(--surface2); border: 2px solid var(--border);
+      border-radius: var(--radius-sm); padding: 16px 8px;
+      text-align: center; cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      min-height: 110px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      position: relative; overflow: hidden;
+    }
+    .slot:hover { transform: translateY(-4px); }
+    .slot::after {
+      content: ''; position: absolute; inset: 0;
+      border-radius: inherit; opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .slot:hover::after { opacity: 1; }
+
+    .slot.empty { border-color: rgba(16,185,129,0.2); }
+    .slot.empty .s { background: rgba(16,185,129,0.1); color: var(--green); }
+    .slot.empty:hover { border-color: var(--green); box-shadow: 0 8px 24px var(--green-glow); }
+
+    .slot.detected { border-color: rgba(245,158,11,0.25); }
+    .slot.detected .s { background: rgba(245,158,11,0.1); color: var(--amber); }
+
+    .slot.reserved { border-color: rgba(139,92,246,0.25); }
+    .slot.reserved .s { background: rgba(139,92,246,0.1); color: var(--purple); }
+
+    .slot.occupied { border-color: rgba(239,68,68,0.2); }
+    .slot.occupied .s { background: rgba(239,68,68,0.1); color: var(--red); }
+
+    .slot .id { font-size: 18px; font-weight: 700; }
+    .slot .icon { font-size: 26px; margin: 2px 0; }
+    .slot .s { font-size: 10px; font-weight: 600; padding: 3px 12px; border-radius: 20px; }
+
+    /* ===== STATS ===== */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+    .stat { background: var(--surface2); border-radius: var(--radius-xs); padding: 12px 8px; text-align: center; }
+    .stat .num { font-size: 22px; font-weight: 700; }
+    .stat .lbl { font-size: 10px; color: var(--text-muted); }
+
+    /* ===== OTP ===== */
+    .otp-section { text-align: center; }
+    .otp-big {
+      font-size: 48px; font-weight: 700;
+      letter-spacing: 10px; padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.3s ease;
+    }
+    .otp-big.active { color: var(--green); text-shadow: 0 0 20px var(--green-glow); }
+    .otp-big.none { color: var(--text-muted); }
+
+    /* ===== GATES ===== */
+    .gate-row { display: flex; gap: 12px; }
     .gate { flex: 1; text-align: center; }
-    .gate-visual { height: 120px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; margin-bottom: 8px; }
-    .gate-bar { position: absolute; bottom: 0; left: 8%; right: 8%; height: 100%; background: linear-gradient(to top, var(--accent), var(--accent2)); border-radius: 3px 3px 0 0; transition: height 0.5s ease; }
-    .gate-bar.closed { height: 100%; }
-    .gate-bar.open { height: 12%; }
-    .gate-label { font-size: 13px; font-weight: 600; }
-    .gate-st { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .gate-visual {
+      height: 140px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: var(--radius-xs);
+      position: relative; overflow: hidden; margin-bottom: 10px;
+    }
+    .gate-bar {
+      position: absolute; bottom: 0; left: 10%; right: 10%;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .gate-bar.closed { height: 100%; background: linear-gradient(to top, #1e293b, #334155); }
+    .gate-bar.open { height: 10%; background: linear-gradient(to top, var(--green), #34d399); box-shadow: 0 -4px 20px rgba(16,185,129,0.2); }
+    .gate-label { font-size: 14px; font-weight: 700; }
+    .gate-st { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
     .gate .btn-group { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 
-    /* LCD */
-    .lcd { background: #1a2332; border: 2px solid #2a3a4a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; min-height: 56px; display: flex; flex-direction: column; justify-content: center; }
-    .lcd .row { font-size: 16px; letter-spacing: 2px; color: var(--accent); text-shadow: 0 0 4px rgba(0,224,255,0.3); }
-    .lcd .row:first-child { margin-bottom: 4px; }
-
-    /* OTP Display - big */
-    .otp-section { text-align: center; }
-    .otp-big { font-size: 42px; font-weight: 700; letter-spacing: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; }
-    .otp-big.active { color: var(--green); }
-    .otp-big.none { color: var(--muted); }
-    .otp-info { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-
-    .otp-input-row { display: flex; gap: 6px; margin-top: 8px; }
-    .otp-input-row input { flex: 1; padding: 8px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 18px; letter-spacing: 4px; text-align: center; }
-    .otp-input-row input:focus { outline: none; border-color: var(--accent); }
-
-    .log-box { background: #06080e; border: 1px solid var(--border); border-radius: 6px; padding: 8px; height: 160px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; }
-    .log-box div { color: var(--muted); }
+    /* ===== LOG ===== */
+    .log-box {
+      background: #05080f;
+      border: 1px solid var(--border); border-radius: var(--radius-xs);
+      padding: 10px 12px; height: 180px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      line-height: 1.6;
+    }
+    .log-box div { color: var(--text-muted); }
     .log-box .ok { color: var(--green); }
     .log-box .err { color: var(--red); }
     .log-box .warn { color: var(--amber); }
     .log-box .info { color: var(--accent); }
 
-    .stat-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .stat { flex: 1; background: var(--surface2); border-radius: 6px; padding: 8px; text-align: center; }
-    .stat .num { font-size: 20px; font-weight: 700; }
-    .stat .lbl { font-size: 10px; color: var(--muted); }
-
-    .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-    .user-info .email { color: var(--muted); }
-
-    ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; z-index: 999; transition: opacity 0.3s; opacity: 0; pointer-events: none; }
-    .toast.show { opacity: 1; }
-    .toast.ok { background: var(--green); color: #000; }
-    .toast.err { background: var(--red); color: #fff; }
-    .toast.info { background: var(--accent); color: #000; }
     .hidden { display: none !important; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 12px 28px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; z-index: 999;
+      transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+      opacity: 0; pointer-events: none;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-lg);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.15); color: var(--green); }
+    .toast.err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.12); color: var(--red); }
+    .toast.info { background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.1); color: var(--accent); }
   </style>
 </head>
 <body>
+
   <div class="header">
-    <h1>🅿️ <span>Smart Parking</span> Simulator</h1>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span class="badge offline" id="connBadge">● Disconnected</span>
-      <span style="font-size:11px;color:var(--muted)" id="userDisplay"></span>
-      <button class="btn btn-sm btn-outline hidden" id="logoutBtn">Logout</button>
+    <h1>
+      <span class="chip">ESP32</span>
+      <span>Hardware Simulator</span>
+      <span class="sub">v2.0</span>
+    </h1>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="badge offline" id="connBadge">◉ Disconnected</span>
+      <span class="user-info">
+        <span style="font-size:11px;color:var(--text-muted)" id="userDisplay"></span>
+      </span>
+      <button class="btn btn-sm btn-outline hidden" id="logoutBtn">Sign Out</button>
     </div>
   </div>
 
   <!-- Login Screen -->
   <div id="loginScreen">
-    <div class="login-box card">
-      <h2 style="margin-bottom:16px;font-size:20px">🔐 Sign In</h2>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Login to receive OTP from Firebase</p>
+    <div class="login-box">
+      <div class="login-icon">🔐</div>
+      <h2>Hardware Console</h2>
+      <p>Sign in with ESP32 service account to receive OTP from Firebase</p>
       <input type="email" id="loginEmail" placeholder="Email" value="parking@test.com" />
       <input type="password" id="loginPassword" placeholder="Password" value="parking123" />
-      <button class="btn btn-primary btn-block btn-lg" id="loginBtn">Sign In</button>
+      <button class="btn btn-primary btn-block btn-lg" id="loginBtn">Connect to Firebase</button>
     </div>
   </div>
 
   <!-- Main App -->
   <div id="appScreen" class="main hidden">
-    <div class="left" style="display:flex;flex-direction:column;gap:12px">
+    <div class="left">
       <!-- LCD -->
       <div class="card">
-        <div class="card-title">🖥️ LCD Display</div>
-        <div class="lcd"><div class="row" id="lcdRow0">SYSTEM READY</div><div class="row" id="lcdRow1">SMART PARKING</div></div>
+        <div class="card-title">
+          <span>🖥️ LCD Display (HD44780)</span>
+          <span style="font-size:10px;color:var(--text-muted)">I²C 0x27</span>
+        </div>
+        <div class="lcd-container">
+          <div class="lcd">
+            <div class="row" id="lcdRow0">SYSTEM READY</div>
+            <div class="row" id="lcdRow1">SMART PARKING</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Parking Slots -->
+      <!-- Slots -->
       <div class="card">
-        <div class="card-title">🅿️ Slots — Click to simulate car parking</div>
+        <div class="card-title">
+          <span>🅿️ Parking Slots</span>
+          <span style="font-size:10px;color:var(--text-muted)">Click to simulate car</span>
+        </div>
         <div class="slots-grid" id="slotsGrid"></div>
       </div>
 
       <!-- Status -->
       <div class="card">
-        <div class="card-title">📊 Status</div>
+        <div class="card-title">📊 System Status</div>
         <div class="stat-row">
           <div class="stat"><div class="num" id="stTotal">4</div><div class="lbl">Total</div></div>
           <div class="stat"><div class="num" id="stAvail">4</div><div class="lbl">Available</div></div>
           <div class="stat"><div class="num" id="stOcc">0</div><div class="lbl">Occupied</div></div>
           <div class="stat"><div class="num" id="stRes">0</div><div class="lbl">Reserved</div></div>
         </div>
-        <div style="text-align:center;font-size:12px;font-weight:600;padding:4px;border-radius:4px" id="parkStatus">—</div>
+        <div style="text-align:center;font-size:13px;font-weight:600;padding:6px 12px;border-radius:var(--radius-xs);background:var(--surface2)" id="parkStatus">—</div>
       </div>
     </div>
 
-    <div class="right" style="display:flex;flex-direction:column;gap:12px">
-      <!-- OTP Display -->
+    <div class="right">
+      <!-- OTP -->
       <div class="card">
-        <div class="card-title">🔑 OTP from Booking</div>
+        <div class="card-title">🔑 Live OTP — من شاشة LCD</div>
         <div class="otp-section">
-          <div class="otp-info" id="otpSlotInfo">Waiting for booking...</div>
-          <div class="otp-big none" id="otpDisplay">—</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px" id="otpSlotInfo">Waiting for booking...</div>
+          <div class="otp-big none" id="otpDisplay">— — — —</div>
         </div>
       </div>
 
       <!-- Gates -->
       <div class="card">
-        <div class="card-title">🚧 Gates</div>
+        <div class="card-title">
+          <span>🚧 Gate Control</span>
+          <span style="font-size:10px;color:var(--text-muted)">PCA9685 · CH0/CH1</span>
+        </div>
         <div class="gate-row">
           <div class="gate">
-            <div class="gate-visual"><div class="gate-bar closed" id="entryBar"></div><div style="position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);font-size:16px;font-weight:700;opacity:0.2">ENTRY</div></div>
-            <div class="gate-label">Entry</div>
+            <div class="gate-visual">
+              <div class="gate-bar closed" id="entryBar"></div>
+              <div style="position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);font-size:14px;font-weight:700;opacity:0.08;letter-spacing:4px;">ENTRY</div>
+            </div>
+            <div class="gate-label">🚪 Entry Gate</div>
             <div class="gate-st" id="entryStatus">CLOSED</div>
             <div class="btn-group">
               <button class="btn btn-sm btn-success" id="carAtGateBtn">🚗 Car at Gate</button>
@@ -187,8 +411,11 @@
             </div>
           </div>
           <div class="gate">
-            <div class="gate-visual"><div class="gate-bar closed" id="exitBar"></div><div style="position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);font-size:16px;font-weight:700;opacity:0.2">EXIT</div></div>
-            <div class="gate-label">Exit</div>
+            <div class="gate-visual">
+              <div class="gate-bar closed" id="exitBar"></div>
+              <div style="position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);font-size:14px;font-weight:700;opacity:0.08;letter-spacing:4px;">EXIT</div>
+            </div>
+            <div class="gate-label">🚙 Exit Gate</div>
             <div class="gate-st" id="exitStatus">CLOSED</div>
             <button class="btn btn-sm btn-amber" id="carAtExitBtn">🚗 Car at Exit</button>
           </div>
@@ -197,8 +424,8 @@
 
       <!-- Serial Log -->
       <div class="card" style="flex:1;display:flex;flex-direction:column">
-        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>📜 Serial Log</span>
+        <div class="card-title">
+          <span>📜 Serial Monitor</span>
           <button class="btn btn-sm btn-outline" id="clearLogBtn">Clear</button>
         </div>
         <div class="log-box" id="logBox"></div>
@@ -448,7 +675,7 @@
         otpEl.className = 'otp-big active';
         slotInfo.textContent = state.currentSlotId ? `Slot: ${state.currentSlotId}` : 'OTP ready';
       } else {
-        otpEl.textContent = '—';
+        otpEl.textContent = '— — — —';
         otpEl.className = 'otp-big none';
         slotInfo.textContent = 'Waiting for booking...';
       }
@@ -472,10 +699,10 @@
       // Gates
       const eb = $('entryBar'); eb.className = `gate-bar ${state.entryOpen ? 'open' : 'closed'}`;
       $('entryStatus').textContent = state.entryOpen ? 'OPEN' : 'CLOSED';
-      $('entryStatus').style.color = state.entryOpen ? 'var(--green)' : 'var(--muted)';
+      $('entryStatus').style.color = state.entryOpen ? 'var(--green)' : 'var(--text-muted)';
       const exb = $('exitBar'); exb.className = `gate-bar ${state.exitOpen ? 'open' : 'closed'}`;
       $('exitStatus').textContent = state.exitOpen ? 'OPEN' : 'CLOSED';
-      $('exitStatus').style.color = state.exitOpen ? 'var(--green)' : 'var(--muted)';
+      $('exitStatus').style.color = state.exitOpen ? 'var(--green)' : 'var(--text-muted)';
       $('carPassedBtn').disabled = !state.carAtEntry;
 
       // Stats
@@ -490,12 +717,12 @@
       if (!email || !pass) { showToast('Enter email and password', 'err'); return; }
       $('loginBtn').disabled = true; $('loginBtn').textContent = 'Signing in...';
       const user = await loginUser(email, pass);
-      $('loginBtn').disabled = false; $('loginBtn').textContent = 'Sign In';
+      $('loginBtn').disabled = false; $('loginBtn').textContent = 'Connect to Firebase';
       if (!user) return;
       state.user = user; state.uid = user.uid;
       $('loginScreen').classList.add('hidden');
       $('appScreen').classList.remove('hidden');
-      $('connBadge').textContent = '● Connected';
+      $('connBadge').textContent = '◉ Connected';
       $('connBadge').className = 'badge online';
       $('userDisplay').textContent = user.email;
       $('logoutBtn').classList.remove('hidden');
@@ -514,7 +741,7 @@
       state.user = null; state.uid = null; state.currentOtp = null;
       $('appScreen').classList.add('hidden');
       $('loginScreen').classList.remove('hidden');
-      $('connBadge').textContent = '● Disconnected';
+      $('connBadge').textContent = '◉ Disconnected';
       $('connBadge').className = 'badge offline';
       $('userDisplay').textContent = '';
       $('logoutBtn').classList.add('hidden');
@@ -547,6 +774,7 @@
 
     log('Smart Parking Simulator loaded', 'info');
     log('Login to receive OTP from web app bookings', 'info');
+
   </script>
 </body>
 </html>
